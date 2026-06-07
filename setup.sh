@@ -39,7 +39,7 @@ act() { if [ "$DRY" = 1 ]; then say "  [dry-run] $*"; else say "  $*"; fi; }
 sha() {
   if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d' ' -f1
   elif command -v shasum >/dev/null 2>&1; then shasum -a 256 "$1" | cut -d' ' -f1
-  else python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" "$1"; fi
+  else node -e "console.log(require('crypto').createHash('sha256').update(require('fs').readFileSync(process.argv[1])).digest('hex'))" "$1"; fi
 }
 
 say "anpunkit setup — dest: $DEST  src: $SRC  $([ "$DRY" = 1 ] && echo '(DRY-RUN)')"
@@ -47,12 +47,12 @@ say "anpunkit setup — dest: $DEST  src: $SRC  $([ "$DRY" = 1 ] && echo '(DRY-R
 MAN_SRC="$SRC/.claude/anpunkit-manifest.json"
 MAN_DEST="$DEST/.claude/anpunkit-manifest.json"
 [ -f "$MAN_SRC" ] || { echo "FATAL: missing $MAN_SRC (corrupt kit)"; exit 1; }
-NEW_VER=$(python3 -c "import json;print(json.load(open('$MAN_SRC'))['version'])")
+NEW_VER=$(node -e "console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).version)" "$MAN_SRC")
 
 # ---- determine mode from installed manifest
 MODE="fresh"
 if [ -f "$MAN_DEST" ]; then
-  OLD_VER=$(python3 -c "import json;print(json.load(open('$MAN_DEST')).get('version',''))" 2>/dev/null || echo "")
+  OLD_VER=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).version||'')}catch(e){console.log('')}" "$MAN_DEST" 2>/dev/null || echo "")
   if   [ "$OLD_VER" = "$NEW_VER" ]; then MODE="repair"
   elif [ -z "$OLD_VER" ]; then MODE="upgrade"
   else
@@ -82,19 +82,23 @@ install_kit_file() {
     mkdir -p "$(dirname "$d")"; cp -p "$s" "$d"; return 0
   fi
   # present — compare against the INSTALLED manifest's recorded checksum
-  local recorded; recorded=$(python3 - "$MAN_DEST" "$rel" <<'PY' 2>/dev/null || true
-import json,sys
-try:
-    m=json.load(open(sys.argv[1]))
-    print(next((f["sha256"] for f in m["files"] if f["path"]==sys.argv[2]),""))
-except Exception: print("")
-PY
+  local recorded; recorded=$(node - "$MAN_DEST" "$rel" <<'NODE' 2>/dev/null || true
+const fs=require('fs');
+try{
+  const m=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+  const f=(m.files||[]).find(f=>f.path===process.argv[3]);
+  console.log(f?f.sha256:'');
+}catch(e){console.log('');}
+NODE
 )
   local cur; cur=$(sha "$d")
-  if [ "$cur" = "$recorded" ] || [ -z "$recorded" ] && [ "$SRC" = "." ]; then
-    # unmodified since last install (or clone flow with file already in place) -> refresh
-    if [ "$cur" = "$(sha "$s")" ]; then act "ok       $rel (identical)"; else
-      backup_one "$d"; act "refresh  $rel"; [ "$DRY" = 1 ] || cp -p "$s" "$d"; fi
+  local new; new=$(sha "$s")
+  # already identical to the new version -> nothing to do (regardless of manifest)
+  if [ "$cur" = "$new" ]; then act "ok       $rel (identical)"; return 0; fi
+  # NOTE: bash gives || and && EQUAL precedence (left-assoc) — group explicitly.
+  if [ "$cur" = "$recorded" ] || { [ -z "$recorded" ] && [ "$SRC" = "." ]; }; then
+    # unmodified since last install (or clone flow) -> refresh to the new version
+    backup_one "$d"; act "refresh  $rel"; [ "$DRY" = 1 ] || cp -p "$s" "$d"
   else
     # user-modified kit file
     if [ "$FORCE" = 1 ]; then backup_one "$d"; act "force    $rel (overwritten)"; [ "$DRY" = 1 ] || cp -p "$s" "$d"
@@ -104,7 +108,7 @@ PY
 
 say ""; say "[1/6] kit-owned files (taxonomy):"
 if [ "$SRC" != "." ]; then
-  while IFS= read -r rel; do install_kit_file "$rel"; done < <(python3 -c "import json;[print(f['path']) for f in json.load(open('$MAN_SRC'))['files']]")
+  while IFS= read -r rel; do install_kit_file "$rel"; done < <(node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).files.forEach(f=>console.log(f.path))" "$MAN_SRC")
 else
   say "  clone flow (src=.) — kit files already in place; verifying + generating only."
 fi
@@ -131,44 +135,41 @@ say ""; say "[3/6] wire hooks (idempotent merge):"
 merge_settings() {
   [ "$DRY" = 1 ] && { act "merge    .claude/settings.json + .cursor/hooks.json"; return 0; }
   backup_one "$DEST/.claude/settings.json"; backup_one "$DEST/.cursor/hooks.json"
-  python3 - "$DEST" <<'PY'
-import json,os,sys
-dest=sys.argv[1]
-def load(p,default):
-    try: return json.load(open(p))
-    except Exception: return default
-# Claude settings.json
-sp=os.path.join(dest,".claude/settings.json")
-s=load(sp,{})
-s.setdefault("$schema","https://json.schemastore.org/claude-code-settings.json")
-hooks=s.setdefault("hooks",{})
-def ensure(event,matcher,cmd):
-    arr=hooks.setdefault(event,[])
-    for blk in arr:
-        for h in blk.get("hooks",[]):
-            if h.get("command")==cmd: return
-    blk={"hooks":[{"type":"command","command":cmd}]}
-    if matcher: blk={"matcher":matcher,**blk}
-    arr.append(blk)
-ensure("SessionStart","startup|clear|compact","bash .claude/hooks/session-start.sh")
-ensure("PreCompact","auto|manual","bash .claude/hooks/pre-compact.sh")
-ensure("SubagentStop","","bash .claude/hooks/subagent-stop.sh")
-os.makedirs(os.path.dirname(sp),exist_ok=True)
-json.dump(s,open(sp,"w"),indent=2); open(sp,"a").write("\n")
-# Cursor hooks.json
-cp=os.path.join(dest,".cursor/hooks.json")
-c=load(cp,{"version":1,"hooks":{}})
-ch=c.setdefault("hooks",{})
-def cursor_ensure(event,cmd):
-    arr=ch.setdefault(event,[])
-    if not any(h.get("command")==cmd for h in arr): arr.append({"command":cmd})
-cursor_ensure("sessionStart","bash .claude/hooks/cursor-session-start.sh")
-cursor_ensure("preCompact","bash .claude/hooks/pre-compact.sh")
-cursor_ensure("subagentStop","bash .claude/hooks/subagent-stop.sh")
-os.makedirs(os.path.dirname(cp),exist_ok=True)
-json.dump(c,open(cp,"w"),indent=2); open(cp,"a").write("\n")
-print("  merged .claude/settings.json + .cursor/hooks.json")
-PY
+  node - "$DEST" <<'NODE'
+const fs=require('fs'),path=require('path');
+const dest=process.argv[2];
+const load=(p,d)=>{try{return JSON.parse(fs.readFileSync(p,'utf8'))}catch(e){return d}};
+const save=(p,o)=>{fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,JSON.stringify(o,null,2)+"\n")};
+// Claude settings.json
+const sp=path.join(dest,'.claude/settings.json');
+const s=load(sp,{});
+if(!s.$schema)s.$schema='https://json.schemastore.org/claude-code-settings.json';
+s.hooks=s.hooks||{};
+const ensure=(event,matcher,cmd)=>{
+  const arr=s.hooks[event]=s.hooks[event]||[];
+  for(const blk of arr)for(const h of (blk.hooks||[]))if(h.command===cmd)return;
+  const blk={hooks:[{type:'command',command:cmd}]};
+  if(matcher)blk.matcher=matcher;
+  arr.push(blk);
+};
+ensure('SessionStart','startup|clear|compact','bash .claude/hooks/session-start.sh');
+ensure('PreCompact','auto|manual','bash .claude/hooks/pre-compact.sh');
+ensure('SubagentStop','','bash .claude/hooks/subagent-stop.sh');
+save(sp,s);
+// Cursor hooks.json
+const cp=path.join(dest,'.cursor/hooks.json');
+const c=load(cp,{version:1,hooks:{}});
+c.hooks=c.hooks||{};
+const cursorEnsure=(event,cmd)=>{
+  const arr=c.hooks[event]=c.hooks[event]||[];
+  if(!arr.some(h=>h.command===cmd))arr.push({command:cmd});
+};
+cursorEnsure('sessionStart','bash .claude/hooks/cursor-session-start.sh');
+cursorEnsure('preCompact','bash .claude/hooks/pre-compact.sh');
+cursorEnsure('subagentStop','bash .claude/hooks/subagent-stop.sh');
+save(cp,c);
+console.log('  merged .claude/settings.json + .cursor/hooks.json');
+NODE
 }
 merge_settings
 
@@ -220,7 +221,7 @@ configure_kb() {
     git ls-remote "$KB_REMOTE" >/dev/null 2>&1 || say "  ! warning: cannot reach KB remote '$KB_REMOTE' (configuring anyway)."; fi
   [ "$DRY" = 1 ] && { act "write .claude/kb-config.json"; return 0; }
   mkdir -p "$DEST/.claude"
-  python3 -c "import json;json.dump({'path':'$KB_PATH','remote':'$KB_REMOTE'},open('$cfg','w'),indent=2)"
+  node -e "require('fs').writeFileSync(process.argv[1],JSON.stringify({path:process.argv[2],remote:process.argv[3]},null,2)+'\n')" "$cfg" "$KB_PATH" "$KB_REMOTE"
   say "  wrote .claude/kb-config.json"
 }
 configure_kb

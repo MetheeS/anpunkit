@@ -16,10 +16,56 @@ if (!fs.existsSync(SETUP)) {
   process.exit(1);
 }
 
+// --- locate a REAL bash on Windows (never the System32 WSL relay).
+// In PowerShell, bare `bash` resolves to C:\Windows\System32\bash.exe, which
+// relays into WSL and fails with "execvpe(/bin/bash) failed" when no distro
+// is installed. We must find Git Bash explicitly.
+function findBash() {
+  if (process.platform !== 'win32') return 'bash';
+  const candidates = [];
+  if (process.env.ANPUNKIT_BASH) candidates.push(process.env.ANPUNKIT_BASH);
+  // Derive from git on PATH: <Git>\cmd\git.exe or <Git>\mingw64\bin\git.exe -> <Git>\bin\bash.exe
+  try {
+    const r = spawnSync('where', ['git'], { encoding: 'utf8' });
+    if (r.status === 0) {
+      for (const line of r.stdout.split(/\r?\n/).map(s => s.trim()).filter(Boolean)) {
+        const d1 = path.resolve(path.dirname(line), '..');
+        const d2 = path.resolve(d1, '..');
+        candidates.push(path.join(d1, 'bin', 'bash.exe'), path.join(d2, 'bin', 'bash.exe'));
+      }
+    }
+  } catch (_) { /* where.exe missing — fall through */ }
+  // Standard Git for Windows install locations
+  for (const base of [
+    process.env.ProgramFiles,
+    process.env['ProgramFiles(x86)'],
+    process.env.LocalAppData ? path.join(process.env.LocalAppData, 'Programs') : null
+  ]) {
+    if (base) candidates.push(path.join(base, 'Git', 'bin', 'bash.exe'));
+  }
+  for (const c of candidates) {
+    if (c && !/system32/i.test(c) && fs.existsSync(c)) return c;
+  }
+  return null;
+}
+
+const bash = findBash();
+if (!bash) {
+  console.error('create-anpunkit: could not find Git Bash.');
+  console.error('The Windows `bash` on PATH is the WSL relay (System32), which is not usable here.');
+  console.error('Fix one of:');
+  console.error('  1. Install Git for Windows (includes Git Bash): https://git-scm.com/download/win');
+  console.error('  2. Run `npx create-anpunkit` from a Git Bash terminal instead of PowerShell.');
+  console.error('  3. Set ANPUNKIT_BASH to the full path of a bash.exe.');
+  process.exit(1);
+}
+
 // Pass through recognised flags only; setup.sh validates the rest.
 const passthrough = ['--kb-path', '--kb-remote', '--no-kb', '--force', '--dry-run'];
 const argv = process.argv.slice(2);
-const args = ['--src', TEMPLATE];
+// Git Bash is happiest with forward slashes; Windows APIs accept them too.
+const fwd = p => p.split(path.sep).join('/');
+const args = ['--src', fwd(TEMPLATE)];
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
   if (passthrough.includes(a)) {
@@ -31,11 +77,10 @@ for (let i = 0; i < argv.length; i++) {
   }
 }
 
-const bash = process.platform === 'win32' ? 'bash' : 'bash'; // Git Bash / WSL on Windows
-console.log(`create-anpunkit -> running setup.sh (src: ${TEMPLATE})`);
-const r = spawnSync(bash, [SETUP, ...args], { stdio: 'inherit', cwd: process.cwd() });
+console.log(`create-anpunkit -> running setup.sh (bash: ${bash})`);
+const r = spawnSync(bash, [fwd(SETUP), ...args], { stdio: 'inherit', cwd: process.cwd() });
 if (r.error) {
-  console.error('create-anpunkit: could not run bash. Install Git Bash (Windows) or ensure bash is on PATH.');
+  console.error(`create-anpunkit: failed to run ${bash}: ${r.error.message}`);
   process.exit(1);
 }
 process.exit(r.status === null ? 1 : r.status);

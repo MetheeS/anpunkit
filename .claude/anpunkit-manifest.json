@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "2.0.1",
   "files": [
     {
       "path": "AGENTS.md",
@@ -19,7 +19,7 @@
     },
     {
       "path": "setup.sh",
-      "sha256": "6e833255c4aeb5f7824db3fe332535f8f0816a0cbf79a0f8f16ee07b606753cf"
+      "sha256": "b6b2f2adbff866f8ed0398006ab2eefb346d9a81b50dc9bccbb3a8a22f6a1b04"
     },
     {
       "path": ".claude/agents/debugger.md",
@@ -55,7 +55,7 @@
     },
     {
       "path": ".claude/hooks/cursor-session-start.sh",
-      "sha256": "504aa12b63508c6926cda28da14fa8951234d49d4b4318da83eecd6f115402e3"
+      "sha256": "e08bcd14fbcfe1831b64e7d8f181b57b02c561cd8d0de6eb16fe06db259be6af"
     },
     {
       "path": ".claude/hooks/pre-compact.sh",
@@ -231,11 +231,11 @@
     },
     {
       "path": "create-anpunkit/package.json",
-      "sha256": "a0cdb99a170ef7f4dc9f0aecc85e8d4c8fde3038d2b176366b17078deee09d09"
+      "sha256": "3fa34141b9698d4ceb6a17d036e86d115de8cd5371c63df3f25705fe2b518d14"
     },
     {
       "path": "create-anpunkit/bin/cli.js",
-      "sha256": "3c12a18a3831c40ddb3633072a26e5f8be28954fe8d058388d7220d13cf4568e"
+      "sha256": "129dae04923b6d380d3ca4601b5dcd2baa6ad4c51c827dddae3e43ea6a9c50e2"
     },
     {
       "path": "create-anpunkit/build.sh",

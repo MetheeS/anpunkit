@@ -17,6 +17,16 @@
 
 Newest first. One entry per architectural change. Appended by `/log-decision`.
 
+- **(v2.0.1)** — Windows portability fix for the npx installer. (1) `cli.js` no
+  longer trusts bare `bash` on win32: PowerShell resolves it to the System32 WSL
+  relay, which fails with `execvpe(/bin/bash)` when no distro is installed. The
+  bin now locates Git Bash explicitly (ANPUNKIT_BASH override -> derive from
+  `where git` -> standard install paths), refuses System32, and fails loudly with
+  install guidance. (2) `setup.sh` and `cursor-session-start.sh` no longer depend
+  on `python3` (absent or a Store stub on many Windows machines): all JSON and
+  checksum work now uses Node, which the kit already requires. Paths passed into
+  Git Bash are normalized to forward slashes.
+
 - **(v2.0)** — Major release. Project name: **anpunkit**; distributed
   as `npx create-anpunkit`. Five locked features: (1) **TDD-first** via a SCAFFOLD
   step (implementer writes stubs only; test-author writes the suite blind against
