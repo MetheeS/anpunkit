@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      { "command": "bash .claude/hooks/cursor-session-start.sh" }
+    ],
+    "preCompact": [
+      { "command": "bash .claude/hooks/pre-compact.sh" }
+    ],
+    "subagentStop": [
+      { "command": "bash .claude/hooks/subagent-stop.sh" }
+    ]
+  }
+}

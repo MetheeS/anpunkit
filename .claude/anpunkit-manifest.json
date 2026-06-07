@@ -1,0 +1,256 @@
+{
+  "version": "2.0.0",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "638d0c19fbc614e162d83b8b5e315c9f38180eaec8d8a88c825d36d6d9ec416b"
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "e9d84381044c68d1b7289708de20bc6d2202eca3f39a2f63e7824a36fa18e299"
+    },
+    {
+      "path": "README.md",
+      "sha256": "56a76a3fefacbf5ffc37d5b1f43748a628e0e4a8142ce2d6058957f8a22781a0"
+    },
+    {
+      "path": ".gitattributes",
+      "sha256": "51ca20efd556b51644b3fd938cd07ff86a17170edd09f7c9caf718911a56b0a2"
+    },
+    {
+      "path": "setup.sh",
+      "sha256": "6e833255c4aeb5f7824db3fe332535f8f0816a0cbf79a0f8f16ee07b606753cf"
+    },
+    {
+      "path": ".claude/agents/debugger.md",
+      "sha256": "4ddc97252275db82356489061b87b71ac39bd9e4cc7a47d0501132c7c7024a52"
+    },
+    {
+      "path": ".claude/agents/e2e-runner.md",
+      "sha256": "9d1f1134092abc28a23a3e48a2fda3aa74b7644267692edad464498e776445f7"
+    },
+    {
+      "path": ".claude/agents/implementer.md",
+      "sha256": "9c2d5e166bac94bfff31a775766094a4275c5a8d1da9bae7823e824f5c307fe6"
+    },
+    {
+      "path": ".claude/agents/infra-provisioner.md",
+      "sha256": "56fa8dd1a6bc526a8d73f71b8e0b5980aec71ca6610070f222cbb77d348c66fb"
+    },
+    {
+      "path": ".claude/agents/planner.md",
+      "sha256": "3ba23521d9f1190a16402ad900d90932519517711fc3ec783eee21ff920a0042"
+    },
+    {
+      "path": ".claude/agents/researcher.md",
+      "sha256": "01b25384b6b6743c60e79e1cc9a2997895c86a6b509375b527a1aa8b70be4306"
+    },
+    {
+      "path": ".claude/agents/synthesizer.md",
+      "sha256": "d17de592a3c83f2439ff9be68337d04c9d4933aa2193c68372005a85a2fdec95"
+    },
+    {
+      "path": ".claude/agents/test-author.md",
+      "sha256": "9af796a9d8e7302847e57fb61e484d0e3f26325586ebbb7e1a79ba20ead1057b"
+    },
+    {
+      "path": ".claude/hooks/cursor-session-start.sh",
+      "sha256": "504aa12b63508c6926cda28da14fa8951234d49d4b4318da83eecd6f115402e3"
+    },
+    {
+      "path": ".claude/hooks/pre-compact.sh",
+      "sha256": "6767551a1eddd09efe01cdb09e3e687165ef204588bf01b4a05836f22b5e2527"
+    },
+    {
+      "path": ".claude/hooks/session-start.sh",
+      "sha256": "9cfce17a40cebf3bc518f37b33b4fad2c47f43b5913fec03b98e96e1d232bc94"
+    },
+    {
+      "path": ".claude/hooks/subagent-stop.sh",
+      "sha256": "fd4b48484db0511e6b78ff659213ebb826e3082e37c98d67dbcb09f159c3e318"
+    },
+    {
+      "path": ".claude/skills/caveman/SKILL.md",
+      "sha256": "62c1522b986679f75e574d7f04c939405df6fc200723d67a255b36d960d9880c"
+    },
+    {
+      "path": ".claude/skills/grill-me/SKILL.md",
+      "sha256": "1cf60d6ce350314e794033ae0773303b54fd1557c3f7ffecfc64dd788fdd4edc"
+    },
+    {
+      "path": ".claude/skills/karpathy-guidelines/SKILL.md",
+      "sha256": "5423139b03a976713348ed4badd5de65e64fbf04d997e7b692917b1d0baddc3b"
+    },
+    {
+      "path": "commands.src/infra.md",
+      "sha256": "ca4e826889bd0a1bcf5298d3da5d453c3eecdb514bc50ba0d735b7f024a58dc0"
+    },
+    {
+      "path": "commands.src/log-decision.md",
+      "sha256": "90c1bd5d6e625730e0b735eefc521239a8e1f547e8f1a0e8d2b8d96ca95612ed"
+    },
+    {
+      "path": "commands.src/log-issue.md",
+      "sha256": "359967180b5dde14f36cfabda0b0a2bc8bbb17580da557805879ab4e50eabeca"
+    },
+    {
+      "path": "commands.src/overview.md",
+      "sha256": "522a091e3e0513dbc15d7f856aca77e18ff70304ac3689f312a3f578e9f3e684"
+    },
+    {
+      "path": "commands.src/phase.md",
+      "sha256": "6cd48c2bbc87e01175594682d22cd7cf652cee84790b8a5677fd4d774679d6f3"
+    },
+    {
+      "path": "commands.src/quick.md",
+      "sha256": "6517eefcc1c6458d441ebea1db736d7070abf6531a7e96c55ae00b90a0763313"
+    },
+    {
+      "path": "commands.src/replan.md",
+      "sha256": "0a599f7c223a8c82cf3f3296ed5d60e5feb97396960e959190d5872f51a602a2"
+    },
+    {
+      "path": "commands.src/store-wisdom.md",
+      "sha256": "960bf4e281d30a451298b5a34c4052cc65be5bc0e9f4a7a91140c7915a2dd362"
+    },
+    {
+      "path": "commands.src/synthesize.md",
+      "sha256": "db4a19ff627eb22fbc1f78d1e8e2c98d73ab05fdd780afe0ca62b7ce9885c21c"
+    },
+    {
+      "path": "commands.src/unstuck.md",
+      "sha256": "a675a648af299074240d3b7b4aa7ca39d41fdfc44520352c67f0895d5c5c1102"
+    },
+    {
+      "path": ".claude/commands/infra.md",
+      "sha256": "ca4e826889bd0a1bcf5298d3da5d453c3eecdb514bc50ba0d735b7f024a58dc0"
+    },
+    {
+      "path": ".claude/commands/log-decision.md",
+      "sha256": "90c1bd5d6e625730e0b735eefc521239a8e1f547e8f1a0e8d2b8d96ca95612ed"
+    },
+    {
+      "path": ".claude/commands/log-issue.md",
+      "sha256": "359967180b5dde14f36cfabda0b0a2bc8bbb17580da557805879ab4e50eabeca"
+    },
+    {
+      "path": ".claude/commands/overview.md",
+      "sha256": "522a091e3e0513dbc15d7f856aca77e18ff70304ac3689f312a3f578e9f3e684"
+    },
+    {
+      "path": ".claude/commands/phase.md",
+      "sha256": "6cd48c2bbc87e01175594682d22cd7cf652cee84790b8a5677fd4d774679d6f3"
+    },
+    {
+      "path": ".claude/commands/quick.md",
+      "sha256": "6517eefcc1c6458d441ebea1db736d7070abf6531a7e96c55ae00b90a0763313"
+    },
+    {
+      "path": ".claude/commands/replan.md",
+      "sha256": "0a599f7c223a8c82cf3f3296ed5d60e5feb97396960e959190d5872f51a602a2"
+    },
+    {
+      "path": ".claude/commands/store-wisdom.md",
+      "sha256": "960bf4e281d30a451298b5a34c4052cc65be5bc0e9f4a7a91140c7915a2dd362"
+    },
+    {
+      "path": ".claude/commands/synthesize.md",
+      "sha256": "db4a19ff627eb22fbc1f78d1e8e2c98d73ab05fdd780afe0ca62b7ce9885c21c"
+    },
+    {
+      "path": ".claude/commands/unstuck.md",
+      "sha256": "a675a648af299074240d3b7b4aa7ca39d41fdfc44520352c67f0895d5c5c1102"
+    },
+    {
+      "path": ".cursor/commands/infra.md",
+      "sha256": "24a6290a0905e744cc3d0adaf6f0d385b859e99eb8326367b6d55c7bcd66d559"
+    },
+    {
+      "path": ".cursor/commands/log-decision.md",
+      "sha256": "3a4ea21091306d2cf1d24595318c4a0bb15e9fd4283d5fb96fc26f2749f26f73"
+    },
+    {
+      "path": ".cursor/commands/log-issue.md",
+      "sha256": "abf7199d735f7c994c628711e5aabd661a0656f13ac5723f0a8ffc2f048ad027"
+    },
+    {
+      "path": ".cursor/commands/overview.md",
+      "sha256": "33710e166d3fb4e9894df709708cd5dec997dfd7fb293931e3f9212567ee06cf"
+    },
+    {
+      "path": ".cursor/commands/phase.md",
+      "sha256": "759d2d5946a9c05ade60dd5e8e47d8d94b7ab6b923be214eb5f5a9979ea6e94e"
+    },
+    {
+      "path": ".cursor/commands/quick.md",
+      "sha256": "771060033625e721b6a96f774aee4131e65ac2b0c481180004dfa8b8cef5d563"
+    },
+    {
+      "path": ".cursor/commands/replan.md",
+      "sha256": "36b47315ba813702f71530402a6ffa7c4c404bbc946c0cda571ead61ddc28874"
+    },
+    {
+      "path": ".cursor/commands/store-wisdom.md",
+      "sha256": "95d553ed835888c36b5ff188844e76c3d8c3695654904ab1284766574938c26c"
+    },
+    {
+      "path": ".cursor/commands/synthesize.md",
+      "sha256": "128067091a83934b7cc0c071713c7936cb4905cbcdd57831cecaac5301a20950"
+    },
+    {
+      "path": ".cursor/commands/unstuck.md",
+      "sha256": "d076cc6307af467f79ea41a934c1e14f2a08b01db93e80e912ab77ebd464f7be"
+    },
+    {
+      "path": ".cursor/rules/anpunkit.md",
+      "sha256": "f7ebf7b8a7d8cb6ad7cef55e06f7d36477cf0859b6f974dbb07059e81838a939"
+    },
+    {
+      "path": "playwright.config.ts",
+      "sha256": "32091109fa51b085ddf562d2896de9b25b69fb6302461bb06212078892cb994a"
+    },
+    {
+      "path": "e2e/global-setup.ts",
+      "sha256": "f9fd377d45bad7925e7645b94f5a839ee5a781f51b5ad9f1b3a8011d527f3317"
+    },
+    {
+      "path": "docker-compose.test.yml",
+      "sha256": "03d3d89354769abcfb2abb42540b4fd9d2bfcc382f62815822db9c910c01d9f7"
+    },
+    {
+      "path": "scripts/e2e-stack.sh",
+      "sha256": "98a6ab95e19e3b560887f6c7e935a1947fe59d5cf881f0da8286db66580a7ce4"
+    },
+    {
+      "path": "scripts/auth-setup.sh",
+      "sha256": "bb30646047a83bf857bf0ffc8cef0560f2ddf012d48a19185407f10740d8fa43"
+    },
+    {
+      "path": "scripts/regression.sh",
+      "sha256": "711bf59c9a1aa66846e1efd4a2127476edd8d92010207807e11e4080d430006e"
+    },
+    {
+      "path": "create-anpunkit/package.json",
+      "sha256": "a0cdb99a170ef7f4dc9f0aecc85e8d4c8fde3038d2b176366b17078deee09d09"
+    },
+    {
+      "path": "create-anpunkit/bin/cli.js",
+      "sha256": "3c12a18a3831c40ddb3633072a26e5f8be28954fe8d058388d7220d13cf4568e"
+    },
+    {
+      "path": "create-anpunkit/build.sh",
+      "sha256": "01fb6d1bb8866db54b0942d341b43e3f0ef96b97f7904909d77393fec49dbb58"
+    },
+    {
+      "path": "create-anpunkit/README.md",
+      "sha256": "3c20b14f5959053e460ae830e81b16f0ab063e882637c32fa70ef4dec58727d1"
+    }
+  ],
+  "hybrid": [
+    ".claude/settings.json",
+    ".cursor/hooks.json",
+    ".gitignore",
+    "docs/DESIGN_LOG.md"
+  ],
+  "generated_from": "commands.src/ -> .claude/commands/ + .cursor/commands/"
+}

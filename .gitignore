@@ -1,0 +1,21 @@
+# anpunkit runtime — never commit these
+docs/.snapshots/
+docs/research/*.md
+!docs/research/INDEX.md
+docs/.kb-snapshot.md
+.env.test
+e2e/.auth/
+playwright-report/
+test-results/
+
+# v2.0 installer artifacts — never commit these
+.anpunkit-backup-*/
+*.anpunkit.md
+*.anpunkit-new
+create-anpunkit/template/
+create-anpunkit/node_modules/
+node_modules/
+
+# infra/ is committed (IaC audit trail) — do NOT ignore it
+# params.json is committed (no secrets) — do NOT ignore it
+# .claude/kb-config.json is committed — it has no secrets (path + remote URL only)

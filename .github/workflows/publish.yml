@@ -1,0 +1,49 @@
+# Publishes create-anpunkit to npm when a v* tag is pushed.
+# GitHub is the source of truth: npm releases can ONLY come from tagged commits.
+# Required repo secret: NPM_TOKEN (npm granular access token with publish rights).
+name: publish-create-anpunkit
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write   # required for npm --provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      # Loud-fail gate: tag, package.json, and the installer manifest must agree.
+      - name: Verify version sync (tag == package.json == anpunkit-manifest)
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./create-anpunkit/package.json').version")
+          MAN=$(node -p "require('./.claude/anpunkit-manifest.json').version")
+          echo "tag=$TAG package=$PKG manifest=$MAN"
+          [ "$TAG" = "$PKG" ] && [ "$TAG" = "$MAN" ] || { echo "FATAL: version mismatch"; exit 1; }
+
+      - name: Build template from repo root
+        run: bash create-anpunkit/build.sh
+
+      - name: Smoke test (fresh install into empty dir)
+        run: |
+          mkdir -p /tmp/smoke && cd /tmp/smoke
+          node "$GITHUB_WORKSPACE/create-anpunkit/bin/cli.js" --no-kb
+          grep -q 'ANPUNKIT-AGENTS-SENTINEL' AGENTS.md
+          test -f .cursor/hooks.json && test -f .claude/commands/phase.md
+          echo "smoke install OK"
+
+      - name: Publish to npm (with provenance)
+        working-directory: create-anpunkit
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
