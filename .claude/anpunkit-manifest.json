@@ -1,5 +1,5 @@
 {
-  "version": "2.0.1",
+  "version": "2.0.2",
   "files": [
     {
       "path": "AGENTS.md",
@@ -11,7 +11,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "56a76a3fefacbf5ffc37d5b1f43748a628e0e4a8142ce2d6058957f8a22781a0"
+      "sha256": "0335a0cecb86b57d01e63f564206cdf6d189ac873fce5c69d0f5081facfec964"
     },
     {
       "path": ".gitattributes",
@@ -19,7 +19,7 @@
     },
     {
       "path": "setup.sh",
-      "sha256": "b6b2f2adbff866f8ed0398006ab2eefb346d9a81b50dc9bccbb3a8a22f6a1b04"
+      "sha256": "85c4aab58c83bf7b62344bbc04b94a4b49f90df0840b5e20660546b540889d6e"
     },
     {
       "path": ".claude/agents/debugger.md",
@@ -231,7 +231,7 @@
     },
     {
       "path": "create-anpunkit/package.json",
-      "sha256": "3fa34141b9698d4ceb6a17d036e86d115de8cd5371c63df3f25705fe2b518d14"
+      "sha256": "4b16cdfd4d9a22379147338664530fd7ce7f0e7566bf63d097f7b8f8f76dcdd8"
     },
     {
       "path": "create-anpunkit/bin/cli.js",

@@ -17,6 +17,17 @@
 
 Newest first. One entry per architectural change. Appended by `/log-decision`.
 
+- **(v2.0.2)** — KB setup stays PATH-FIRST: the user clones the KB repo
+  themselves (`git clone ... ~/anpunkit-kb`) and passes `--kb-path` (or the
+  interactive prompt). New: the remote URL is auto-recorded from the clone's
+  `origin`, so `--kb-remote` is optional metadata. After setup, no manual git:
+  the session-start hook pulls; `/store-wisdom` commits and pushes (human-gated).
+  REJECTED: URL-first setup where anpunkit runs `git clone` itself — it was built
+  and tested, then dropped: it entangles a fresh install with the user's GitHub
+  authentication (SSH keys / gh auth), and a clone failure mid-setup is a worse
+  failure mode than asking a developer to run one clone command they already
+  understand. Setup records state; it does not acquire credentials.
+
 - **(v2.0.1)** — Windows portability fix for the npx installer. (1) `cli.js` no
   longer trusts bare `bash` on win32: PowerShell resolves it to the System32 WSL
   relay, which fails with `execvpe(/bin/bash)` when no distro is installed. The

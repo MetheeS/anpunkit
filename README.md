@@ -26,7 +26,7 @@ npx create-anpunkit            # non-destructive: never clobbers your files
 /overview                      # bootstrap the project (includes Phase 0 infra)
 ```
 Useful flags: `--dry-run` (print the plan, write nothing), `--force` (overwrite
-user-modified kit files), `--kb-path <dir>` / `--kb-remote <url>` / `--no-kb`.
+user-modified kit files), `--kb-path <dir>` (your pre-cloned KB repo; remote auto-recorded from its origin) / `--no-kb`.
 
 Upgrading an existing anpunkit project? Re-run `npx create-anpunkit`. It refreshes
 kit-owned files, preserves anything you modified as `<file>.anpunkit-new`, merges
@@ -157,13 +157,19 @@ re-discovering the same Azure/Databricks gotchas project after project.
 **Setup (one-time per machine):**
 
 ```bash
-# 1. Create a GitHub repo: anpunkit-kb (empty)
-# 2. Clone it somewhere permanent on your machine
-git clone git@github.com:your-username/anpunkit-kb.git ~/anpunkit-kb
+# 1. Create a GitHub repo: anpunkit-kb (empty is fine)
+# 2. Clone it yourself, somewhere permanent — you own the git auth
+git clone git@github.com:<you>/anpunkit-kb.git ~/anpunkit-kb
 
-# 3. During setup.sh, provide the path when prompted
-bash setup.sh
+# 3. Point anpunkit at it
+npx create-anpunkit --kb-path ~/anpunkit-kb
+# (or paste the path at the interactive prompt)
 ```
+
+That's the last manual git you'll run against the KB. From then on the
+**session-start hook pulls** each session and **`/store-wisdom` commits and
+pushes** (always with your approval). The remote URL is recorded automatically
+from the clone's `origin`; `--kb-remote <url>` overrides it if needed.
 
 **Usage:**
 

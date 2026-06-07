@@ -207,23 +207,41 @@ say ""; say "[6/6] shared KB:"
 configure_kb() {
   local cfg="$DEST/.claude/kb-config.json"
   if [ "$NO_KB" = 1 ]; then say "  --no-kb: skipping KB."; return 0; fi
-  if [ -z "$KB_PATH" ] && [ -z "$KB_REMOTE" ]; then
+
+  # Path-first by design: YOU clone the KB repo (you own the git auth);
+  # anpunkit only records where it lives. After that, the session-start hook
+  # pulls and /store-wisdom commits+pushes (human-gated) — no manual git needed.
+  if [ -z "$KB_PATH" ]; then
     if [ -t 0 ]; then
-      printf "  Local path to cloned anpunkit-kb repo (blank to skip): "; read -r KB_PATH || true
-      [ -z "$KB_PATH" ] && { say "  skipped KB (no path given)."; return 0; }
+      printf "  Local path to your cloned anpunkit-kb repo (blank to skip): "
+      read -r KB_PATH || true
+      [ -z "$KB_PATH" ] && { say "  skipped KB."; return 0; }
     else
-      say "  no KB flags + no TTY -> skipping KB (re-run with --kb-path / --kb-remote)."; return 0
+      say "  no KB flags + no TTY -> skipping KB (re-run with --kb-path <dir>)."; return 0
     fi
   fi
-  if [ -n "$KB_PATH" ] && [ ! -d "$KB_PATH" ]; then
-    echo "  ! KB path '$KB_PATH' not a directory. Clone your anpunkit-kb repo first."; return 0; fi
+  if [ ! -d "$KB_PATH" ]; then
+    echo "  ! KB path '$KB_PATH' is not a directory. Clone your KB repo first, e.g.:"
+    echo "      git clone git@github.com:<you>/anpunkit-kb.git ~/anpunkit-kb"
+    echo "    then re-run with --kb-path ~/anpunkit-kb"
+    return 0
+  fi
+
+  # remote is metadata: explicit --kb-remote wins, else read the clone's origin
+  if [ -z "$KB_REMOTE" ] && [ -d "$KB_PATH/.git" ]; then
+    KB_REMOTE=$(git -C "$KB_PATH" remote get-url origin 2>/dev/null || echo "")
+  fi
   if [ -n "$KB_REMOTE" ]; then
-    git ls-remote "$KB_REMOTE" >/dev/null 2>&1 || say "  ! warning: cannot reach KB remote '$KB_REMOTE' (configuring anyway)."; fi
-  [ "$DRY" = 1 ] && { act "write .claude/kb-config.json"; return 0; }
+    git ls-remote "$KB_REMOTE" >/dev/null 2>&1 \
+      || say "  ! warning: cannot reach KB remote '$KB_REMOTE' right now (recording anyway; pull/push will need it)."
+  fi
+
+  [ "$DRY" = 1 ] && { act "write .claude/kb-config.json (path: $KB_PATH)"; return 0; }
   mkdir -p "$DEST/.claude"
   node -e "require('fs').writeFileSync(process.argv[1],JSON.stringify({path:process.argv[2],remote:process.argv[3]},null,2)+'\n')" "$cfg" "$KB_PATH" "$KB_REMOTE"
-  say "  wrote .claude/kb-config.json"
+  say "  wrote .claude/kb-config.json (path: $KB_PATH${KB_REMOTE:+, remote: $KB_REMOTE})"
 }
+
 configure_kb
 
 # ---- finalize: stamp the installed manifest (copy the new one)
