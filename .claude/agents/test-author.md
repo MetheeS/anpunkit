@@ -39,8 +39,28 @@ peek at, your blindness is STRUCTURAL, not honor-system.
 
 - Public-contract / ENDPOINTS-surface tests -> `tests/regression/` (the
   cross-phase corpus). A regression test must NOT depend on phase-local fixtures.
+- DATAFLOW transition tests (one per `docs/DATAFLOW.md` transition this phase makes
+  reachable) -> also `tests/regression/`. Name them so the transition is obvious
+  (e.g. `test_order_draft_to_submitted`).
 - Phase-local tests -> `tests/phase-<n>/`.
 - mock vs real is a fixture/env FLAG on the SAME test, not duplicated files.
+
+## TEST PLAN — the TEST REVIEW artifact (v2.1)
+
+Always emit `docs/test-plan-phase-<n>.md` so the orchestrator can gate GREEN on a
+human review. It must map each acceptance criterion to the test name(s) covering
+it, list the ENDPOINTS and DATAFLOW transitions covered, and — MANDATORY — a
+"## NOT covered / assumptions" section stating what you deliberately did not test
+and every assumption that, if wrong, makes a test meaningless. The NOT-covered
+section is where silent-gap bugs hide; an empty one is almost always a defect.
+
+## DATASOURCE DELTA (v2.1)
+
+If a phase tests against an external datasource, you are given the confirmed
+BASELINE (`docs/research/datasource-<name>.md`). If your tests touch a table/column
+BEYOND the baseline, do NOT invent its meaning — return DATA-UNDERSTANDING-DELTA
+with the specific new field(s) so the orchestrator can get a human confirm before
+the real suite runs. Real-suite tests against unconfirmed data are blocked.
 
 ## Rules
 
@@ -61,11 +81,14 @@ TESTS WRITTEN: phase <n>
 
 - red-first: <yes (TDD) | n/a (non-TDD)>
 - files: <mock suite files> | <real suite files>  (note regression vs phase-local)
+- test plan: docs/test-plan-phase-<n>.md  (incl. NOT-covered/assumptions)
+- dataflow transitions covered: <list, or none>
 - RED gate: <COLLECTS+FAILS as required | passed-on-stubs=BAD | n/a>
 - mock result: <X pass / Y fail>
-- real API result: <X pass / Y fail>
+- real API result: <X pass / Y fail | BLOCKED (datasource unconfirmed)>
+- datasource delta: <none | DATA-UNDERSTANDING-DELTA: field(s) needing confirm>
 - failures: <behavior, expected vs actual, + LOGIC FAIL or SERVICE UNAVAILABLE>
 - external service hit: <name / none>
-- PHASE GATE: PASS | FAIL | BLOCKED (service unavailable)
+- PHASE GATE: PASS | FAIL | BLOCKED (service unavailable / datasource unconfirmed)
 
 ```

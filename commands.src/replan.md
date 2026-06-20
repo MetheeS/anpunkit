@@ -1,5 +1,5 @@
 ---
-description: Revise docs/PLAN.md when it no longer matches reality — add, cut, split, merge, or reorder phases.
+description: Revise docs/PLAN.md when it no longer matches reality — add, cut, split, merge, or reorder phases. Keeps the deploy-last, ENDPOINTS, and DATAFLOW invariants intact.
 argument-hint: [what changed about the plan]
 ---
 
@@ -25,10 +25,13 @@ Use when PLAN.md no longer matches reality. Change: $ARGUMENTS
    - A new external service is mentioned (Stripe, Twilio, a new Azure service, etc.)
    - The change involves architecture (a new integration pattern, auth change, etc.)
    - A service tier or quota change is implied
+   - A new external DATASOURCE or a change to an object's STATE LIFECYCLE
 
    If ANY of these signals are present: dispatch `researcher` in DESIGN mode
-   with the specific new service/pattern as the DESIGN TOPICS list. Show me the
-   key findings before proceeding to step 3.
+   with the specific new service/pattern as the DESIGN TOPICS list. For a new
+   datasource, it drafts a DATA UNDERSTANDING; surface it to me as a falsifiable
+   claim and confirm (baseline) before proceeding. Show me the key findings
+   before step 3.
 
    If none: proceed directly to step 3 (impl-research may still be dispatched
    in step 3 for non-trivial changes per the original logic).
@@ -37,11 +40,13 @@ Use when PLAN.md no longer matches reality. Change: $ARGUMENTS
    was not needed, dispatch `researcher` in IMPL mode to ground the re-plan
    in facts.
 
-4. RE-PLAN. Dispatch `planner` with the change + current PLAN.md. It must:
+4. RE-PLAN. Dispatch `planner` with the change + current PLAN.md + DATAFLOW.md.
+   It must:
    - Keep done phases untouched.
    - Insert / cut / split / merge / reorder only PENDING phases.
    - Place new phases in correct DEPENDENCY order.
    - Keep every phase a vertical slice with its own acceptance spec.
+   - Preserve the UI-existence criterion on any frontend-touching phase.
    - Ensure the LAST pending phase still contains the deploy task block.
    - Renumber pending phases if needed; update STATE.md `phase:` pointer.
 
@@ -54,11 +59,20 @@ Use when PLAN.md no longer matches reality. Change: $ARGUMENTS
    reconciled corpus still passes against live services. A failure -> surface it
    and stop before approval.
 
-6. SHOW ME the revised phase list + the regression-corpus changes, and STOP for
-   approval.
+6. RECONCILE DATAFLOW.md (v2.1). If the re-plan adds, cuts, or re-scopes objects
+   or transitions, update docs/DATAFLOW.md in step:
+   - A CUT/removed object or transition -> remove its row(s) and retire the
+     matching regression test(s).
+   - A new object/transition -> add the row(s); mark them PENDING until the phase
+     that makes them reachable runs. The deploy-last / "no PENDING at final phase"
+     invariant (hard rule 14) still holds.
+   - A reorder must not strand a transition as permanently unreachable.
 
-7. ARCHITECTURE SELF-CHECK: re-planning is not normally a kit-architecture
+7. SHOW ME the revised phase list + the regression-corpus changes + the
+   DATAFLOW.md changes, and STOP for approval.
+
+8. ARCHITECTURE SELF-CHECK: re-planning is not normally a kit-architecture
    change. Only run /log-decision if the workflow itself changed (rare).
 
-Report what changed: phases added / cut / split / reordered, and regression
-tests retired / consolidated.
+Report what changed: phases added / cut / split / reordered, regression tests
+retired / consolidated, and DATAFLOW rows added / removed.

@@ -24,6 +24,12 @@ CRITICAL constraint: you are BLIND to the implementation. Read only:
 
 2. Read docs/ENDPOINTS.md for the known API surface.
 
+   UI-EXISTENCE CHECK (v2.1): the acceptance spec MUST name at least one
+   user-visible interactive element this phase introduces (a button, a route
+   landing, a form control) — not merely "page renders 200". If it does not,
+   return UNDERSPEC so the orchestrator can sharpen the spec. "Page renders" can
+   pass while the signin button is missing; that is the exact gap this closes.
+
 3. Write Playwright specs under `e2e/` from the phase's acceptance criteria.
    Test observable user-visible behavior only. No internals.
 
@@ -31,6 +37,12 @@ CRITICAL constraint: you are BLIND to the implementation. Read only:
    - `scripts/e2e-stack.sh up` (no-op if E2E_STACK_EXTERNAL=1)
    - `npx playwright test`
    - `scripts/e2e-stack.sh down` when done
+
+   EVIDENCE (v2.1, mandatory): at EACH UI-existence assertion, capture a
+   screenshot REGARDLESS of pass/fail (override Playwright's failure-only
+   default) to `docs/evidence/e2e-phase-<n>/<element-slug>.png`. One shot per
+   asserted element — evidence maps 1:1 to an acceptance criterion. This is the
+   proof the element was actually on screen, captured on green as well as red.
 
 5. FAILURE CLASSIFICATION — for every failure:
    - **LOGIC FAIL** — app behavior is wrong. Reaches the debugger.
@@ -54,10 +66,12 @@ Append one line to `docs/research/INDEX.md`.
 E2E DONE: phase <n>
 
 - target: <azure-deployed | local-docker> at <URL>
+- ui-existence asserted: <named element(s) | UNDERSPEC if none>
 - specs: <files written>
 - result: <X pass / Y fail>
+- evidence: docs/evidence/e2e-phase-<n>/ (<count> screenshots, one per assertion)
 - failures: <step + classification>
-- PHASE GATE: PASS | FAIL (LOGIC FAIL present) | BLOCKED (<reason>)
+- PHASE GATE: PASS | FAIL (LOGIC FAIL present) | BLOCKED (<reason>) | UNDERSPEC
 - full detail: docs/research/e2e-<phase-slug>.md
 
 ```

@@ -52,8 +52,18 @@ Before any web search or local investigation:
    - Unknowns that the grill-me questions raised but did not answer.
 3. Use WebSearch/WebFetch to get REAL, current documentation — not assumptions.
    Skip web search for a topic if KB step 0 returned a fresh (non-stale) hit.
-4. Write FULL findings to `docs/research/design-<topic-slug>.md`.
-5. Append one line per topic to docs/research/INDEX.md:
+4. EXTERNAL DATASOURCE — DATA UNDERSTANDING (v2.1): for every external datasource
+   in scope, write `docs/research/datasource-<name>.md` proposing a FALSIFIABLE
+   understanding the human can confirm or correct in the RESEARCH REVIEW:
+   - grain (one row = what?)
+   - the fields likely under test, each with its meaning + real-world
+     nullability/range (not just the declared type)
+   - a sample-fixture shape (so a wrong understanding shows up as an obviously
+     wrong sample)
+   - the ASSUMPTION that, if wrong, makes a test meaningless (stated explicitly)
+   Do NOT invent values you cannot ground; mark them as the human's to confirm.
+5. Write FULL findings to `docs/research/design-<topic-slug>.md`.
+6. Append one line per topic to docs/research/INDEX.md:
    `YYYY-MM-DD | design-<slug> | <one-sentence conclusion> | docs/research/design-<slug>.md`
 
 RETURN (terse — orchestrator reads the file only if needed):
@@ -62,11 +72,12 @@ RETURN (terse — orchestrator reads the file only if needed):
 DESIGN RESEARCH DONE: <slug>
 
 - topics covered: <list>
-- kb hits: <slugs that matched from KB snapshot, or “none”>
-- stale kb entries: <slugs that were stale and re-researched, or “none”>
+- kb hits: <slugs that matched from KB snapshot, or "none">
+- stale kb entries: <slugs that were stale and re-researched, or "none">
 - key findings: <3-5 bullets — constraints, limits, surprises>
 - new questions raised: <questions the research surfaced that grill-me should probe>
-- unknowns: <what could not be confirmed, or “none”>
+- datasource understanding: <datasource-<name>.md drafted for confirm, or "none">
+- unknowns: <what could not be confirmed, or "none">
 - full detail: docs/research/design-<slug>.md
 
 ```
@@ -92,11 +103,11 @@ RETURN (terse):
 
 RESEARCH DONE: <topic-slug>
 
-- kb hits: <slugs that matched, or “none”>
-- stale kb entries: <slugs that were stale and re-researched, or “none”>
+- kb hits: <slugs that matched, or "none">
+- stale kb entries: <slugs that were stale and re-researched, or "none">
 - summary: <3-5 bullet conclusions>
 - hypothesis (bugs only): <root cause + key evidence, 1-2 lines>
-- unknowns: <what still needs checking, or “none”>
+- unknowns: <what still needs checking, or "none">
 - full detail: docs/research/<topic-slug>.md
 
 ```

@@ -3,6 +3,7 @@ docs/.snapshots/
 docs/research/*.md
 !docs/research/INDEX.md
 docs/.kb-snapshot.md
+docs/evidence/
 .env.test
 e2e/.auth/
 playwright-report/

@@ -61,7 +61,8 @@ if (!bash) {
 }
 
 // Pass through recognised flags only; setup.sh validates the rest.
-const passthrough = ['--kb-path', '--kb-remote', '--no-kb', '--force', '--dry-run'];
+const passthrough = ['--kb-path', '--kb-remote', '--no-kb', '--force', '--dry-run', '--tools', '--add-tool'];
+const valueFlags = ['--kb-path', '--kb-remote', '--tools', '--add-tool'];
 const argv = process.argv.slice(2);
 // Git Bash is happiest with forward slashes; Windows APIs accept them too.
 const fwd = p => p.split(path.sep).join('/');
@@ -70,7 +71,7 @@ for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
   if (passthrough.includes(a)) {
     args.push(a);
-    if (a === '--kb-path' || a === '--kb-remote') { args.push(argv[++i]); }
+    if (valueFlags.includes(a)) { args.push(argv[++i]); }
   } else {
     console.error(`create-anpunkit: unknown flag '${a}'. Allowed: ${passthrough.join(' ')}`);
     process.exit(2);

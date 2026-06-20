@@ -1,6 +1,6 @@
 {
   "name": "create-anpunkit",
-  "version": "2.0.3",
+  "version": "2.1.0",
   "description": "Scaffold the anpunkit AI-coding workflow (Claude Code + Cursor) into a project. Upgrade-safe, non-destructive.",
   "bin": {
     "create-anpunkit": "bin/cli.js"

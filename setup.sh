@@ -12,6 +12,8 @@
 #   hybrid      -> merged idempotently, never replaced
 #
 # Flags: --src DIR --kb-path P --kb-remote URL --no-kb --force --dry-run
+#        --tools LIST   (comma/space list from: claude cursor; default both)
+#        --add-tool T   (additive: install T's files into an existing project)
 set -euo pipefail
 
 SRC="."
@@ -20,6 +22,9 @@ KB_REMOTE="${ANPUNKIT_KB_REMOTE:-}"
 NO_KB=0
 FORCE=0
 DRY=0
+TOOLS_FLAG=""
+ADD_TOOL=""
+AVAILABLE_TOOLS="claude cursor"   # tools with real adapters; extend here
 while [ $# -gt 0 ]; do
   case "$1" in
     --src)       SRC="$2"; shift 2;;
@@ -28,6 +33,8 @@ while [ $# -gt 0 ]; do
     --no-kb)     NO_KB=1; shift;;
     --force)     FORCE=1; shift;;
     --dry-run)   DRY=1; shift;;
+    --tools)     TOOLS_FLAG="$2"; shift 2;;
+    --add-tool)  ADD_TOOL="$2"; shift 2;;
     *) echo "unknown flag: $1" >&2; exit 2;;
   esac
 done
@@ -63,6 +70,36 @@ fi
 say "mode: $MODE (installed: ${OLD_VER:-none} -> new: $NEW_VER)"
 [ "$MODE" = "newer-installed" ] && say "  ! installed version is newer than this package — proceeding as repair, review carefully."
 
+# ---- tool selection (v2.1): install only the selected tools' adapters/hooks/files
+TOOLS_FILE="$DEST/.claude/anpunkit-tools.json"
+norm_tools() { printf '%s' "$1" | tr ',' ' ' | tr -s ' ' | sed 's/^ //; s/ $//'; }
+read_recorded_tools() {
+  [ -f "$TOOLS_FILE" ] || { printf ''; return; }
+  node -e "try{console.log((JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).tools||[]).join(' '))}catch(e){console.log('')}" "$TOOLS_FILE" 2>/dev/null || printf ''
+}
+valid_tool() { case " $AVAILABLE_TOOLS " in *" $1 "*) return 0;; *) return 1;; esac; }
+
+RECORDED="$(read_recorded_tools)"
+if [ -n "$TOOLS_FLAG" ]; then
+  TOOLS="$(norm_tools "$TOOLS_FLAG")"
+elif [ -n "$RECORDED" ]; then
+  TOOLS="$RECORDED"               # re-run: preserve prior selection
+elif [ "$MODE" = "fresh" ] && [ -t 0 ]; then
+  printf "  Select tools to install (space-separated from: %s) [claude cursor]: " "$AVAILABLE_TOOLS"
+  read -r _sel || true
+  TOOLS="$(norm_tools "${_sel:-claude cursor}")"
+else
+  TOOLS="claude cursor"           # non-interactive default = both (no regression)
+fi
+# additive: --add-tool unions into the selection (and is recorded)
+[ -n "$ADD_TOOL" ] && TOOLS="$(norm_tools "$TOOLS $(norm_tools "$ADD_TOOL")" | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+TOOLS="$(norm_tools "$TOOLS")"
+# validate
+for t in $TOOLS; do valid_tool "$t" || { echo "FATAL: unknown tool '$t' (available: $AVAILABLE_TOOLS)"; exit 2; }; done
+[ -z "$TOOLS" ] && { echo "FATAL: no tools selected"; exit 2; }
+tool_selected() { case " $TOOLS " in *" $1 "*) return 0;; *) return 1;; esac; }
+say "tools: $TOOLS$([ -n "$ADD_TOOL" ] && echo '  (+'"$ADD_TOOL"' added)')"
+
 BACKUP="$DEST/.anpunkit-backup-$(date +%Y%m%d-%H%M%S)"
 backup_one() {
   [ "$MODE" = "fresh" ] && return 0
@@ -77,6 +114,11 @@ backup_one() {
 install_kit_file() {
   local rel="$1" s="$SRC/$1" d="$DEST/$1"
   [ -f "$s" ] || return 0
+  # v2.1 tool gating: cursor-only files skipped unless cursor selected.
+  # (.claude/* is shared infra — Cursor reads .claude/agents + .claude/hooks too.)
+  case "$rel" in
+    .cursor/*) tool_selected cursor || { act "skip     $rel (cursor not selected)"; return 0; };;
+  esac
   if [ ! -f "$d" ]; then
     act "write    $rel"; [ "$DRY" = 1 ] && return 0
     mkdir -p "$(dirname "$d")"; cp -p "$s" "$d"; return 0
@@ -114,61 +156,76 @@ else
 fi
 
 # ---- generate command adapters from commands.src/ (manifest-owned output)
-say ""; say "[2/6] generate command adapters:"
+say ""; say "[2/6] generate command adapters (tools: $TOOLS):"
 gen_adapters() {
-  mkdir -p "$DEST/.claude/commands" "$DEST/.cursor/commands" "$DEST/.cursor/rules"
+  tool_selected claude && mkdir -p "$DEST/.claude/commands"
+  tool_selected cursor && mkdir -p "$DEST/.cursor/commands" "$DEST/.cursor/rules"
   for f in "$DEST"/commands.src/*.md; do
     [ -f "$f" ] || continue
     n=$(basename "$f")
-    act "claude   .claude/commands/$n"
-    act "cursor   .cursor/commands/$n"
-    [ "$DRY" = 1 ] && continue
-    cp -p "$f" "$DEST/.claude/commands/$n"
-    awk 'BEGIN{fm=0} NR==1 && $0=="---"{fm=1; next} fm==1 && $0=="---"{fm=0; next} fm==0{print}' "$f" \
-      | sed '/^$/{1d}' > "$DEST/.cursor/commands/$n"
+    if tool_selected claude; then
+      act "claude   .claude/commands/$n"
+      [ "$DRY" = 1 ] || cp -p "$f" "$DEST/.claude/commands/$n"
+    fi
+    if tool_selected cursor; then
+      act "cursor   .cursor/commands/$n"
+      [ "$DRY" = 1 ] || awk 'BEGIN{fm=0} NR==1 && $0=="---"{fm=1; next} fm==1 && $0=="---"{fm=0; next} fm==0{print}' "$f" \
+        | sed '/^$/{1d}' > "$DEST/.cursor/commands/$n"
+    fi
   done
 }
 gen_adapters
 
-# ---- hybrid JSON merge: ensure the 3 hook entries, never drop user keys
-say ""; say "[3/6] wire hooks (idempotent merge):"
+# ---- hybrid JSON merge: ensure the hook entries for selected tools, never drop user keys
+say ""; say "[3/6] wire hooks (idempotent merge, tools: $TOOLS):"
 merge_settings() {
-  [ "$DRY" = 1 ] && { act "merge    .claude/settings.json + .cursor/hooks.json"; return 0; }
-  backup_one "$DEST/.claude/settings.json"; backup_one "$DEST/.cursor/hooks.json"
+  [ "$DRY" = 1 ] && { act "merge    $(tool_selected claude && echo -n '.claude/settings.json ')$(tool_selected cursor && echo -n '.cursor/hooks.json')"; return 0; }
+  tool_selected claude && backup_one "$DEST/.claude/settings.json"
+  tool_selected cursor && backup_one "$DEST/.cursor/hooks.json"
+  CLAUDE_SEL=$(tool_selected claude && echo 1 || echo 0) \
+  CURSOR_SEL=$(tool_selected cursor && echo 1 || echo 0) \
   node - "$DEST" <<'NODE'
 const fs=require('fs'),path=require('path');
 const dest=process.argv[2];
+const claudeSel=process.env.CLAUDE_SEL==='1', cursorSel=process.env.CURSOR_SEL==='1';
 const load=(p,d)=>{try{return JSON.parse(fs.readFileSync(p,'utf8'))}catch(e){return d}};
 const save=(p,o)=>{fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,JSON.stringify(o,null,2)+"\n")};
+const out=[];
 // Claude settings.json
-const sp=path.join(dest,'.claude/settings.json');
-const s=load(sp,{});
-if(!s.$schema)s.$schema='https://json.schemastore.org/claude-code-settings.json';
-s.hooks=s.hooks||{};
-const ensure=(event,matcher,cmd)=>{
-  const arr=s.hooks[event]=s.hooks[event]||[];
-  for(const blk of arr)for(const h of (blk.hooks||[]))if(h.command===cmd)return;
-  const blk={hooks:[{type:'command',command:cmd}]};
-  if(matcher)blk.matcher=matcher;
-  arr.push(blk);
-};
-ensure('SessionStart','startup|clear|compact','bash .claude/hooks/session-start.sh');
-ensure('PreCompact','auto|manual','bash .claude/hooks/pre-compact.sh');
-ensure('SubagentStop','','bash .claude/hooks/subagent-stop.sh');
-save(sp,s);
+if(claudeSel){
+  const sp=path.join(dest,'.claude/settings.json');
+  const s=load(sp,{});
+  if(!s.$schema)s.$schema='https://json.schemastore.org/claude-code-settings.json';
+  s.hooks=s.hooks||{};
+  const ensure=(event,matcher,cmd)=>{
+    const arr=s.hooks[event]=s.hooks[event]||[];
+    for(const blk of arr)for(const h of (blk.hooks||[]))if(h.command===cmd)return;
+    const blk={hooks:[{type:'command',command:cmd}]};
+    if(matcher)blk.matcher=matcher;
+    arr.push(blk);
+  };
+  ensure('SessionStart','startup|clear|compact','bash .claude/hooks/session-start.sh');
+  ensure('PreCompact','auto|manual','bash .claude/hooks/pre-compact.sh');
+  ensure('SubagentStop','','bash .claude/hooks/subagent-stop.sh');
+  save(sp,s);
+  out.push('.claude/settings.json');
+}
 // Cursor hooks.json
-const cp=path.join(dest,'.cursor/hooks.json');
-const c=load(cp,{version:1,hooks:{}});
-c.hooks=c.hooks||{};
-const cursorEnsure=(event,cmd)=>{
-  const arr=c.hooks[event]=c.hooks[event]||[];
-  if(!arr.some(h=>h.command===cmd))arr.push({command:cmd});
-};
-cursorEnsure('sessionStart','bash .claude/hooks/cursor-session-start.sh');
-cursorEnsure('preCompact','bash .claude/hooks/pre-compact.sh');
-cursorEnsure('subagentStop','bash .claude/hooks/subagent-stop.sh');
-save(cp,c);
-console.log('  merged .claude/settings.json + .cursor/hooks.json');
+if(cursorSel){
+  const cp=path.join(dest,'.cursor/hooks.json');
+  const c=load(cp,{version:1,hooks:{}});
+  c.hooks=c.hooks||{};
+  const cursorEnsure=(event,cmd)=>{
+    const arr=c.hooks[event]=c.hooks[event]||[];
+    if(!arr.some(h=>h.command===cmd))arr.push({command:cmd});
+  };
+  cursorEnsure('sessionStart','bash .claude/hooks/cursor-session-start.sh');
+  cursorEnsure('preCompact','bash .claude/hooks/pre-compact.sh');
+  cursorEnsure('subagentStop','bash .claude/hooks/subagent-stop.sh');
+  save(cp,c);
+  out.push('.cursor/hooks.json');
+}
+console.log('  merged '+(out.join(' + ')||'(nothing — no tool selected hooks)'));
 NODE
 }
 merge_settings
@@ -180,13 +237,17 @@ say ""; say "[4/6] AGENTS.md / CLAUDE.md verify:"
 verify_import() {
   local CL="$DEST/CLAUDE.md" AG="$DEST/AGENTS.md"
   [ -f "$AG" ] || { echo "FATAL VERIFY: AGENTS.md not on disk"; exit 1; }
-  # bare top-level @AGENTS.md import (not indented, not fenced)
-  if ! grep -qE '^@AGENTS\.md[[:space:]]*$' "$CL"; then
-    echo "FATAL VERIFY: CLAUDE.md is missing a bare top-level '@AGENTS.md' import line"; exit 1; fi
-  # sentinel present in AGENTS.md
+  # sentinel present in AGENTS.md (shared — both tools read AGENTS.md)
   if ! grep -q 'ANPUNKIT-AGENTS-SENTINEL' "$AG"; then
     echo "FATAL VERIFY: AGENTS.md sentinel missing (file clobbered or empty?)"; exit 1; fi
-  say "  VERIFY ok: bare @AGENTS.md import + AGENTS.md on disk + sentinel present."
+  # CLAUDE.md bare @AGENTS.md import is Claude-specific — only verify if claude selected
+  if tool_selected claude; then
+    if ! grep -qE '^@AGENTS\.md[[:space:]]*$' "$CL"; then
+      echo "FATAL VERIFY: CLAUDE.md is missing a bare top-level '@AGENTS.md' import line"; exit 1; fi
+    say "  VERIFY ok: bare @AGENTS.md import + AGENTS.md on disk + sentinel present."
+  else
+    say "  VERIFY ok: AGENTS.md on disk + sentinel present (claude not selected — CLAUDE.md import not required)."
+  fi
 }
 verify_import
 
@@ -194,7 +255,7 @@ verify_import
 say ""; say "[5/6] .gitignore patch:"
 patch_gitignore() {
   local gi="$DEST/.gitignore"
-  local -a needles=("docs/.snapshots/" "docs/.kb-snapshot.md" ".anpunkit-backup-*/" "*.anpunkit-new")
+  local -a needles=("docs/.snapshots/" "docs/.kb-snapshot.md" "docs/evidence/" ".anpunkit-backup-*/" "*.anpunkit-new")
   [ "$DRY" = 1 ] && { act "patch .gitignore (${#needles[@]} entries)"; return 0; }
   touch "$gi"
   for n in "${needles[@]}"; do grep -qxF "$n" "$gi" || printf '%s\n' "$n" >> "$gi"; done
@@ -244,12 +305,14 @@ configure_kb() {
 
 configure_kb
 
-# ---- finalize: stamp the installed manifest (copy the new one)
+# ---- finalize: stamp the installed manifest (copy the new one) + record tools
 if [ "$DRY" != 1 ]; then
   cp -p "$MAN_SRC" "$MAN_DEST" 2>/dev/null || true
+  mkdir -p "$DEST/.claude"
+  node -e "require('fs').writeFileSync(process.argv[1],JSON.stringify({tools:process.argv[2].split(' ').filter(Boolean)},null,2)+'\n')" "$TOOLS_FILE" "$TOOLS" 2>/dev/null || true
   [ -d "$BACKUP" ] && say "" && say "backup written: ${BACKUP#$DEST/}"
 fi
 
-say ""; say "anpunkit setup complete ($MODE). Open Claude Code or Cursor — the SessionStart/sessionStart hook fires automatically."
+say ""; say "anpunkit setup complete ($MODE, tools: $TOOLS). Open Claude Code or Cursor — the SessionStart/sessionStart hook fires automatically."
 if [ "$DRY" = 1 ]; then say "(dry-run: no files were written.)"; fi
 exit 0

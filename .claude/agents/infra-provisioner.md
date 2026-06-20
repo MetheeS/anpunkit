@@ -1,6 +1,6 @@
 ---
 name: infra-provisioner
-description: Provisions and verifies Azure infrastructure. Generates Bicep templates, runs what-if diff for human review, applies on approval, writes docs/INFRA.md and .env.test. Never applies without orchestrator confirming human approval.
+description: Provisions and verifies Azure infrastructure. Generates Bicep templates, runs what-if diff for human review, applies on approval, writes docs/INFRA.md and .env.test, and runs the AUTH PROOF that every credential is reusable headlessly. Never applies without orchestrator confirming human approval.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: opus
 ---
@@ -18,6 +18,8 @@ apply only after human approval, write the manifest.
 - VERIFY: check existing infra matches docs/INFRA.md. Report drift.
 - UPDATE <what changed>: add/remove/change a resource. Produce a delta Bicep.
 - REGENERATE-ENV: re-read docs/INFRA.md and rewrite .env.test only.
+- AUTH-PROOF: prove every credential the project's real tests use is reusable
+  headlessly (see Step 8). Run after PROVISION and on demand.
 
 ---
 
@@ -104,6 +106,14 @@ Run: `az deployment group create --resource-group <rg> --template-file infra/mai
 - Test user: <upn or "not yet created">
 - Conditional Access MFA exclusion: <yes/pending>
 
+## AUTH PROOF
+- status: <PASS | FAIL | not-yet-run>  (Phase 0 incomplete until PASS)
+- last run: <ISO timestamp>
+- credentials proven reusable (headless, twice in a row):
+  - Entra/MSAL app login: <pass/fail>
+  - <datasource name> (<type>): <pass/fail>
+  …
+
 ## Cost summary
 | Resource | SKU | Est. THB/month |
 |---|---|---|
@@ -150,10 +160,31 @@ INFRA VERIFY DONE
 - recommendation: <"all good" | "run /infra UPDATE <description>">
 ```
 
+### Step 8 — AUTH PROOF (v2.1, mode AUTH-PROOF; also runs after APPLY)
+
+Prove every credential the project's real tests will use is REUSABLE without
+interaction. "Reusable" = obtainable headlessly TWICE IN A ROW with zero prompts.
+
+1. Enumerate credentials in scope: the Entra/MSAL app login (ROPC, dedicated
+   MFA-excluded test account — NEVER drive the Microsoft login UI), plus every
+   external datasource credential in docs/DATAFLOW.md external rows +
+   docs/ENDPOINTS.md auth column (Azure SQL, Tableau, etc.).
+2. For each credential: obtain it headlessly (prime), then obtain it AGAIN — the
+   second obtain must succeed from cache/refresh with no prompt. A prompt or a
+   second-obtain failure means NOT reusable.
+3. Write the result to docs/INFRA.md `## AUTH PROOF` (PASS only if every
+   credential passed twice). Return:
+```
+AUTH PROOF: PASS | FAIL
+- proven reusable: <list>
+- failed: <credential + reason, or "none">
+```
+A FAIL means Phase 0 is not complete; the orchestrator stops until it passes.
+
 -----
 
 ## RETURN FORMAT
 
-WHAT-IF READY | APPLIED | VERIFY DONE | UNDERSPEC | ERROR
+WHAT-IF READY | APPLIED | VERIFY DONE | AUTH PROOF: PASS/FAIL | UNDERSPEC | ERROR
 Full detail always in docs/research/infra-<slug>-<timestamp>.md.
 Keep return terse — file path for detail.

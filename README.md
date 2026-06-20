@@ -25,8 +25,12 @@ npx create-anpunkit            # non-destructive: never clobbers your files
 # then open Claude Code or Cursor — the session-start hook fires automatically
 /overview                      # bootstrap the project (includes Phase 0 infra)
 ```
-Useful flags: `--dry-run` (print the plan, write nothing), `--force` (overwrite
-user-modified kit files), `--kb-path <dir>` (your pre-cloned KB repo; remote auto-recorded from its origin) / `--no-kb`.
+Useful flags: `--dry-run` (print the per-tool plan, write nothing), `--force`
+(overwrite user-modified kit files), `--tools <claude,cursor>` (install only the
+selected tools' files; interactive menu if omitted on a fresh TTY install),
+`--add-tool <name>` (lay down an additional tool's files into an existing
+project), `--kb-path <dir>` (your pre-cloned KB repo; remote auto-recorded from
+its origin) / `--no-kb`.
 
 Upgrading an existing anpunkit project? Re-run `npx create-anpunkit`. It refreshes
 kit-owned files, preserves anything you modified as `<file>.anpunkit-new`, merges
@@ -46,13 +50,13 @@ cd my-project && bash setup.sh
 
 |Command          |Does                                                                          |
 |-----------------|------------------------------------------------------------------------------|
-|`/overview`      |design-research → grill (×2) → OVERVIEW → PLAN (Phase 0 always first) → STATE |
-|`/infra`         |provision Azure infra: Bicep → what-if → review → apply → INFRA.md + .env.test|
-|`/phase [n]`     |run one phase: research → implement → blind test, with circuit breaker        |
+|`/overview`      |design-research → RESEARCH REVIEW → grill (×2, incl. data/state flow) → OVERVIEW + DATAFLOW → PLAN (Phase 0 first) → STATE|
+|`/infra`         |provision Azure infra: Bicep → what-if → review → apply → INFRA.md + .env.test → AUTH PROOF|
+|`/phase [n]`     |run one phase: research → SCAFFOLD → RED → TEST REVIEW → GREEN → E2E, with circuit breaker|
 |`/quick [change]`|small obvious change, direct, no agent chain                                  |
 |`/unstuck`       |deep re-research after a circuit breaker (you trigger it)                     |
 |`/synthesize`    |compress STATE.md, dedup ISSUES.md, prune snapshots                           |
-|`/replan`        |revise PLAN.md when it drifts                                                 |
+|`/replan`        |revise PLAN.md when it drifts (reconciles regression corpus + DATAFLOW)        |
 |`/log-issue`     |append an error with root cause + failed attempts                             |
 |`/log-decision`  |record an architectural change in DESIGN_LOG.md                               |
 |`/store-wisdom`  |promote resolved issues + research findings to shared KB                      |
@@ -65,19 +69,36 @@ cd my-project && bash setup.sh
 
 The main session is the orchestrator — it routes, it does not implement.
 
-## The loop (v2.0: TDD-first + regression guard)
+## The loop (v2.1: TDD-first + human gates + coverage guards)
 
 Phases that add a public callable surface run test-first:
-`RESEARCH -> SCAFFOLD -> RED -> GREEN -> TEST -> FIX -> CLOSE`. The implementer
-writes interface stubs only; the `test-author` writes the suite blind against
-those stubs (it must collect cleanly and FAIL — the RED gate); the implementer
-then fills to green. Pure infra/config/doc phases keep the direct
-`RESEARCH -> IMPLEMENT -> TEST` order.
+`RESEARCH -> SCAFFOLD -> RED -> TEST REVIEW -> GREEN -> E2E -> FIX -> CLOSE`. The
+implementer writes interface stubs only; the `test-author` writes the suite blind
+against those stubs (it must collect cleanly and FAIL — the RED gate) and emits a
+`docs/test-plan-phase-<n>.md` with a mandatory "NOT covered / assumptions"
+section. **TEST REVIEW** is a human gate: you approve the test plan before the
+implementer fills to green — so "all tests passed but the core was broken" can't
+slip through silently. Pure infra/config/doc phases keep the direct
+`RESEARCH -> IMPLEMENT -> TEST` order (no TEST REVIEW — no public surface).
+
+Frontend phases are detected by a **deterministic path match** (`has_frontend` +
+the frontend root, both set in `docs/OVERVIEW.md`): if a phase changes a file
+under the frontend root, **E2E is mandatory**, the acceptance spec must name the
+specific user-visible element it introduces (not "page renders 200"), and the
+`e2e-runner` captures a screenshot at each such assertion — on success too — to a
+gitignored `docs/evidence/` dir. That's the fix for shipping a missing sign-in button.
 
 Every phase CLOSE runs the accumulated **mock regression corpus**
-(`tests/regression/`, via `scripts/regression.sh`) and a hard ENDPOINTS coverage
-gate — so a contract built in an early phase cannot be silently broken later. The
-final phase additionally runs the full real corpus.
+(`tests/regression/`, via `scripts/regression.sh`) plus a hard ENDPOINTS coverage
+gate AND a **DATAFLOW transition-coverage gate** — every reachable state
+transition in `docs/DATAFLOW.md` (the data-side analogue of `ENDPOINTS.md`,
+grilled out at `/overview`) must have a regression test. The final phase
+additionally runs the full real corpus and allows zero PENDING transitions.
+
+External datasources get a confirmed, falsifiable **DATA UNDERSTANDING** (grain,
+fields, sample shape, meaning-breaking assumption) before real tests run, and auth
+is proven reusable once at `/infra` (obtainable headlessly twice in a row) with a
+cheap liveness check each phase.
 
 Methodology lives in one place: the portable **`AGENTS.md`** at the repo root.
 `CLAUDE.md` is a thin `@AGENTS.md` shim with Claude-native wiring only.
@@ -142,6 +163,7 @@ home-dir custom-prompts with a divergent UX).
 - `docs/PLAN.md` — vertical-slice phase plan (Phase 0 always first)
 - `docs/HISTORY.md` — one line per finished phase
 - `docs/OVERVIEW.md` — project scope, written after double-grill
+- `docs/DATAFLOW.md` — state-transition table per key object (grilled at /overview; drives CLOSE coverage gate)
 - `docs/INFRA.md` — Azure resource manifest + cost estimates (written by infra-provisioner)
 - `docs/ENDPOINTS.md` — API/service endpoint catalogue (maintained by implementer)
 - `docs/.snapshots/` — pre-compact recovery markers (auto-pruned, gitignored)
@@ -206,6 +228,7 @@ phase starts, owned by the `infra-provisioner` subagent.
 /infra             # generates Bicep -> what-if diff -> you review -> "go" -> apply
                    # writes docs/INFRA.md (resource manifest + cost estimates)
                    # writes .env.test (generated, never fill manually)
+                   # runs AUTH PROOF (every credential proven reusable headlessly)
 /phase 1           # PRE-FLIGHT checks Phase 0 is done before starting
 ```
 
@@ -225,13 +248,15 @@ Prompts `az login` only if stale. No credential storage — your account only.
 1. `infra-provisioner` reads `docs/OVERVIEW.md` for the system design
 1. Generates `infra/main.bicep` + per-service modules under `infra/modules/`
 1. Runs `az deployment what-if` — shows exactly what will be created
-1. **Stops and waits for your “go”** — nothing applied without your review
+1. **Stops and waits for your "go"** — nothing applied without your review
 1. Applies the deployment
 1. Writes `docs/INFRA.md` — resource IDs, endpoints, cost estimates (THB, SEA region)
 1. Generates `.env.test` from the manifest
+1. Runs the **AUTH PROOF** — proves every credential (Entra/MSAL + datasources) is obtainable headlessly twice in a row
 
 Re-run `/infra` any time infra drifts or a new resource is needed.
 Re-run `/infra regenerate-env` to refresh `.env.test` only.
+Re-run `/infra auth-proof` to re-prove credentials on demand.
 
 ### Cost awareness
 
@@ -257,7 +282,7 @@ Three layers: unit/integration (mock suite), real API (`test-author`), and
 functional browser E2E (`e2e-runner`, Playwright).
 
 **Phase gate:** a frontend-touching phase closes only when the real API suite
-AND the browser E2E suite pass. Mock-green alone never closes a phase.
+AND the browser E2E suite pass with screenshot evidence. Mock-green alone never closes a phase.
 
 **MSAL / Entra ID auth.** Browser E2E never drives the Microsoft login UI.
 `e2e/global-setup.ts` uses ROPC flow with a dedicated test account (MFA excluded
@@ -265,7 +290,7 @@ via Conditional Access) to fetch a real token and inject it into the MSAL cache.
 
 **E2E setup (one-time per project):**
 
-1. Run `/infra` — it generates `.env.test` automatically.
+1. Run `/infra` — it generates `.env.test` automatically and runs the AUTH PROOF.
 1. Provision the Entra test user + Conditional Access MFA exclusion.
 1. `npm i -D @playwright/test && npx playwright install chromium`
 
