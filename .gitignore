@@ -9,6 +9,10 @@ e2e/.auth/
 playwright-report/
 test-results/
 
+# Python bytecode (kit ships tests/helpers/spec-assert.py)
+__pycache__/
+*.pyc
+
 # v2.0 installer artifacts — never commit these
 .anpunkit-backup-*/
 *.anpunkit.md

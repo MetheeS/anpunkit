@@ -119,6 +119,18 @@ Store the round-1 answers as working context — do NOT write OVERVIEW.md yet.
      interactive element the phase introduces (not "page renders 200").
    - Map each phase to the DATAFLOW transitions it is expected to make reachable.
 
+   The planner ALSO writes the up-front SKELETON spec files (v2.2, §5.44/§5.51):
+   one `docs/spec-phase-<n>.md` per public-surface phase (skip Phase 0 + pure
+   infra/config/doc phases), enumerating the case NAMES — happy path, each named
+   edge, each named failure + error code — for every `dataflow:` transition and
+   every `acceptance` criterion, with `TBD` values. The generated header transcludes
+   that phase's `acceptance:` line + in-scope `DATAFLOW.md` transition rows verbatim.
+
+8b. STAMP each skeleton's staleness hash: for every `docs/spec-phase-<n>.md` the
+   planner wrote, run `bash scripts/spec-staleness.sh stamp <n>`. This embeds the
+   hash of the transcluded acceptance line + transition rows so phase-time
+   `/phase` can detect upstream drift. (Values are filled per phase by `spec-author`.)
+
 9. Create docs/STATE.md:
 ```
 
@@ -144,6 +156,11 @@ blocker: none
  ```
 
 Then stop and show me PLAN.md + DATAFLOW.md for approval before any phase starts.
+EXTEND the approval surface (v2.2, §5.51 — one confirmation, no new gate): for each
+public-surface phase, list the transition/acceptance ids it covers and the enumerated
+case NAMES (no values). I confirm the case-name set is COMPLETE here — these names
+are the up-front behavioral contract; values get filled + reviewed per phase at
+`/phase` SPEC REVIEW.
 
 Remind me: "Run `/infra` next to provision the Azure environment (Phase 0) and
 run the one-time AUTH PROOF before starting Phase 1."

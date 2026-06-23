@@ -52,7 +52,7 @@ cd my-project && bash setup.sh
 |-----------------|------------------------------------------------------------------------------|
 |`/overview`      |design-research → RESEARCH REVIEW → grill (×2, incl. data/state flow) → OVERVIEW + DATAFLOW → PLAN (Phase 0 first) → STATE|
 |`/infra`         |provision Azure infra: Bicep → what-if → review → apply → INFRA.md + .env.test → AUTH PROOF|
-|`/phase [n]`     |run one phase: research → SCAFFOLD → RED → TEST REVIEW → GREEN → E2E, with circuit breaker|
+|`/phase [n]`     |run one phase: research → SPEC fill → SPEC REVIEW → SCAFFOLD → RED → conformance → GREEN → boundary/E2E, with circuit breaker|
 |`/quick [change]`|small obvious change, direct, no agent chain                                  |
 |`/unstuck`       |deep re-research after a circuit breaker (you trigger it)                     |
 |`/synthesize`    |compress STATE.md, dedup ISSUES.md, prune snapshots                           |
@@ -63,23 +63,31 @@ cd my-project && bash setup.sh
 
 ## Subagents
 
-`researcher` (Haiku, two modes: design + impl) · `planner` (Opus) · `infra-provisioner` (Opus) ·
-`implementer` (Opus, SCAFFOLD/FILL modes) · `test-author` (Opus, blind, RED-first) · `debugger` (Opus, isolated) ·
-`e2e-runner` (Opus, blind, Playwright) · `synthesizer` (Haiku)
+`researcher` (Haiku, two modes: design + impl) · `planner` (Opus, also writes skeleton specs) ·
+`infra-provisioner` (Opus) · `spec-author` (Opus, fills per-phase spec + fixtures) ·
+`implementer` (Opus, SCAFFOLD/FILL modes) · `test-author` (Opus, harness emitter) · `debugger` (Opus, isolated) ·
+`e2e-runner` (Opus, Playwright emitter) · `synthesizer` (Haiku)
 
 The main session is the orchestrator — it routes, it does not implement.
 
-## The loop (v2.1: TDD-first + human gates + coverage guards)
+## The loop (v2.2: spec-driven contract + upstream human gate + generated tests)
 
-Phases that add a public callable surface run test-first:
-`RESEARCH -> SCAFFOLD -> RED -> TEST REVIEW -> GREEN -> E2E -> FIX -> CLOSE`. The
-implementer writes interface stubs only; the `test-author` writes the suite blind
-against those stubs (it must collect cleanly and FAIL — the RED gate) and emits a
-`docs/test-plan-phase-<n>.md` with a mandatory "NOT covered / assumptions"
-section. **TEST REVIEW** is a human gate: you approve the test plan before the
-implementer fills to green — so "all tests passed but the core was broken" can't
-slip through silently. Pure infra/config/doc phases keep the direct
-`RESEARCH -> IMPLEMENT -> TEST` order (no TEST REVIEW — no public surface).
+Phases that add a public callable surface run spec-first:
+`RESEARCH -> SPEC fill -> spec-staleness -> SPEC REVIEW -> SCAFFOLD -> RED -> spec-conformance -> GREEN -> boundary/E2E -> FIX -> CLOSE`.
+The reviewable, authoritative artifact is the **spec**, not the test. At `/overview`
+the planner enumerates the case *names* per phase (skeleton `docs/spec-phase-<n>.md`).
+At phase start the new `spec-author` fills them with concrete cases — real inputs,
+real expected outputs, matcher tokens for volatile fields — written to shared
+`fixtures/` files. **SPEC REVIEW** is a human gate that sits *upstream* (before any
+code): you confirm falsifiable claims in plain language ("empty order → 422
+EMPTY_ORDER"). Tests are then GENERATED from the locked spec rows (deep-equality +
+matcher tokens for `data`; Playwright from the descriptor for `ui`) loading the
+*same* fixtures — so a test physically cannot assert different values than the spec.
+`spec-conformance.sh` blocks GREEN until no `TBD` remains and every case-id is cited
+by a boundary test. This is the v2.2 fix for "both agents independently fabricated
+the same wrong contract from a one-line acceptance and the suite went green on a
+broken core." Pure infra/config/doc phases keep the direct
+`RESEARCH -> IMPLEMENT -> TEST` order (no spec, no SPEC REVIEW — no public surface).
 
 Frontend phases are detected by a **deterministic path match** (`has_frontend` +
 the frontend root, both set in `docs/OVERVIEW.md`): if a phase changes a file
@@ -164,6 +172,9 @@ home-dir custom-prompts with a divergent UX).
 - `docs/HISTORY.md` — one line per finished phase
 - `docs/OVERVIEW.md` — project scope, written after double-grill
 - `docs/DATAFLOW.md` — state-transition table per key object (grilled at /overview; drives CLOSE coverage gate)
+- `docs/spec-phase-<n>.md` — per-phase behavioral contract (skeleton at /overview, filled by spec-author; human-reviewed at SPEC REVIEW)
+- `fixtures/<case-id>-{input,expected,ui}.json` — shared by the spec row and the generated test harness (committed; part of the contract)
+- `tests/helpers/spec-assert.{py,ts}` — kit-versioned matcher-aware comparator (honors `<UUID>`, `<ISO8601>`, … tokens)
 - `docs/INFRA.md` — Azure resource manifest + cost estimates (written by infra-provisioner)
 - `docs/ENDPOINTS.md` — API/service endpoint catalogue (maintained by implementer)
 - `docs/.snapshots/` — pre-compact recovery markers (auto-pruned, gitignored)

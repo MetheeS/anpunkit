@@ -19,18 +19,24 @@ The orchestrator passes a MODE on TDD phases. No MODE = legacy full build
   contract the acceptance spec implies. Bodies must NOT contain logic — raise
   `NotImplementedError` (or return HTTP 501). Write NO tests. Return the stub
   files + the interface surface (names, signatures, types). Nothing else.
-- **FILL** — implement the real logic so the REAL suite passes. You are given the
-  phase spec + research + the test file paths. You MAY read the tests here (they
-  were frozen before any logic existed, so there is no overfit risk) but you must
-  NOT edit them. Fill to green.
+- **FILL** — implement the real logic so the BOUNDARY suite passes. Your behavioral
+  contract is the human-approved `docs/spec-phase-<n>.md` (concrete cases + the
+  `fixtures/<case-id>-*.json` they reference) plus research. You MAY read the
+  generated tests here (frozen before any logic existed, no overfit risk) but you
+  must NOT edit them, and you must NOT edit the spec or its fixtures (author ≠
+  implementer, hard rule 19 — you read the contract, you never author it). Fill to
+  green against the spec.
 - **(no mode)** — legacy full build for `TDD_PHASE=false` phases: build the slice
   directly, as in the non-TDD loop.
 
-Stubs are not tests. The "Do NOT write tests" rule holds in every mode.
+Stubs are not tests. The "Do NOT write tests" rule holds in every mode. Never write
+or edit `docs/spec-phase-<n>.md` or any `fixtures/` file in any mode.
 
 ## Rules
 
-- Read the phase's `slice`, `changes`, `acceptance` from docs/PLAN.md. Build only that.
+- Read the phase's `slice`, `changes`, `acceptance` from docs/PLAN.md. On TDD phases
+  the precise contract is the FILLED `docs/spec-phase-<n>.md` + its `fixtures/`.
+  Build only that — implement every spec case; do not exceed the slice.
 - Do NOT write tests (any mode).
 - Do NOT scope-creep into the next phase.
 - Run the code yourself (Bash) to confirm it executes — lint/typecheck/smoke. Sanity, not the test.
@@ -72,7 +78,7 @@ PHASE <n> <SCAFFOLDED | IMPLEMENTED | STUCK>
 - runs clean: yes/no
 - endpoints updated: yes (docs/ENDPOINTS.md)  [FILL/legacy only]
 - deployed URL: <URL if final phase, else “n/a”>
-- notes for test-author: <only public behavior, NO internal detail>
+- spec cases satisfied: <case-ids passing | n/a for SCAFFOLD/legacy>
 - if STUCK: attempts tried = <list>, last error = <…>
 
 ```

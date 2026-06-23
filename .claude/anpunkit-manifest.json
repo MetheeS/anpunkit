@@ -1,25 +1,25 @@
 {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "files": [
     {
       "path": "AGENTS.md",
-      "sha256": "638d0c19fbc614e162d83b8b5e315c9f38180eaec8d8a88c825d36d6d9ec416b"
+      "sha256": "0e4bdc92e8e33355fdfca8d7c3f644bd5f6b91d8b11b1837c65241c25a8dd695"
     },
     {
       "path": "CLAUDE.md",
-      "sha256": "e9d84381044c68d1b7289708de20bc6d2202eca3f39a2f63e7824a36fa18e299"
+      "sha256": "132e64b4a9a5a178deb4db810324f79338c2af65d598fd5e26f183225c2a4d98"
     },
     {
       "path": "README.md",
-      "sha256": "0335a0cecb86b57d01e63f564206cdf6d189ac873fce5c69d0f5081facfec964"
+      "sha256": "ca353eea88978b65dab78355ec304de0b8fb5d8ecb54d4316ee493de4459f002"
     },
     {
       "path": ".gitattributes",
-      "sha256": "51ca20efd556b51644b3fd938cd07ff86a17170edd09f7c9caf718911a56b0a2"
+      "sha256": "5362db7bc5f0639f80bb191f5d6436a2c54b1ca8a398362fba14136eca4014bf"
     },
     {
       "path": "setup.sh",
-      "sha256": "85c4aab58c83bf7b62344bbc04b94a4b49f90df0840b5e20660546b540889d6e"
+      "sha256": "77e994cbd6db69dde57fbdd8ce1460bc61cd24ad338e816303f7243165001e32"
     },
     {
       "path": ".claude/agents/debugger.md",
@@ -27,23 +27,27 @@
     },
     {
       "path": ".claude/agents/e2e-runner.md",
-      "sha256": "9d1f1134092abc28a23a3e48a2fda3aa74b7644267692edad464498e776445f7"
+      "sha256": "c454ad3217d6adc21e0e6cda5746e3094ea299cd7e71f761e1f417a7d6a2391e"
     },
     {
       "path": ".claude/agents/implementer.md",
-      "sha256": "9c2d5e166bac94bfff31a775766094a4275c5a8d1da9bae7823e824f5c307fe6"
+      "sha256": "e6598fdb77657616f821695323653cfdded44db85a428597d1c8074a56bbf816"
     },
     {
       "path": ".claude/agents/infra-provisioner.md",
-      "sha256": "56fa8dd1a6bc526a8d73f71b8e0b5980aec71ca6610070f222cbb77d348c66fb"
+      "sha256": "52a54a2aaaf7e53d28e261f5e01f2693fd0a4883fd93f844a112a742a91f9149"
+    },
+    {
+      "path": ".claude/agents/spec-author.md",
+      "sha256": "3e352514bfd5eb32f966cfa12014d706d17b3a12ad2155e2f826243c03fb7d0c"
     },
     {
       "path": ".claude/agents/planner.md",
-      "sha256": "3ba23521d9f1190a16402ad900d90932519517711fc3ec783eee21ff920a0042"
+      "sha256": "a1a2b86aa5a88d8b9fee9af3a8d10c7f1f09e5a2fb32f831dce38b010c507771"
     },
     {
       "path": ".claude/agents/researcher.md",
-      "sha256": "01b25384b6b6743c60e79e1cc9a2997895c86a6b509375b527a1aa8b70be4306"
+      "sha256": "aa54503f8c9998d3aa97aa322c0ba47d23cae8aea6236530ddc2dfc44e7c4658"
     },
     {
       "path": ".claude/agents/synthesizer.md",
@@ -51,7 +55,7 @@
     },
     {
       "path": ".claude/agents/test-author.md",
-      "sha256": "9af796a9d8e7302847e57fb61e484d0e3f26325586ebbb7e1a79ba20ead1057b"
+      "sha256": "adc53adb326424dcb215a5f074c7df3dfcb6644f2c63ce1e9ed68d2810dc8398"
     },
     {
       "path": ".claude/hooks/cursor-session-start.sh",
@@ -83,7 +87,7 @@
     },
     {
       "path": "commands.src/infra.md",
-      "sha256": "ca4e826889bd0a1bcf5298d3da5d453c3eecdb514bc50ba0d735b7f024a58dc0"
+      "sha256": "fe0e6ba6cf0c2fc3826ab67cd882752e9450677b1ffef440388349f0ba3c4fb6"
     },
     {
       "path": "commands.src/log-decision.md",
@@ -95,11 +99,11 @@
     },
     {
       "path": "commands.src/overview.md",
-      "sha256": "522a091e3e0513dbc15d7f856aca77e18ff70304ac3689f312a3f578e9f3e684"
+      "sha256": "85a300dcdd94d95c87c25c84d06619a38b5b3679631f68b511da11d7010e5cb8"
     },
     {
       "path": "commands.src/phase.md",
-      "sha256": "6cd48c2bbc87e01175594682d22cd7cf652cee84790b8a5677fd4d774679d6f3"
+      "sha256": "60a0e6442c2a3945afc4aec991cd44d48705eb8c142f3c2284db7095bb5441d9"
     },
     {
       "path": "commands.src/quick.md",
@@ -107,7 +111,7 @@
     },
     {
       "path": "commands.src/replan.md",
-      "sha256": "0a599f7c223a8c82cf3f3296ed5d60e5feb97396960e959190d5872f51a602a2"
+      "sha256": "57597623a2118e5867963aa61a04cff7808eb5ce8e2aed5bebb5247cff6be8ad"
     },
     {
       "path": "commands.src/store-wisdom.md",
@@ -123,7 +127,7 @@
     },
     {
       "path": ".claude/commands/infra.md",
-      "sha256": "ca4e826889bd0a1bcf5298d3da5d453c3eecdb514bc50ba0d735b7f024a58dc0"
+      "sha256": "fe0e6ba6cf0c2fc3826ab67cd882752e9450677b1ffef440388349f0ba3c4fb6"
     },
     {
       "path": ".claude/commands/log-decision.md",
@@ -135,11 +139,11 @@
     },
     {
       "path": ".claude/commands/overview.md",
-      "sha256": "522a091e3e0513dbc15d7f856aca77e18ff70304ac3689f312a3f578e9f3e684"
+      "sha256": "85a300dcdd94d95c87c25c84d06619a38b5b3679631f68b511da11d7010e5cb8"
     },
     {
       "path": ".claude/commands/phase.md",
-      "sha256": "6cd48c2bbc87e01175594682d22cd7cf652cee84790b8a5677fd4d774679d6f3"
+      "sha256": "60a0e6442c2a3945afc4aec991cd44d48705eb8c142f3c2284db7095bb5441d9"
     },
     {
       "path": ".claude/commands/quick.md",
@@ -147,7 +151,7 @@
     },
     {
       "path": ".claude/commands/replan.md",
-      "sha256": "0a599f7c223a8c82cf3f3296ed5d60e5feb97396960e959190d5872f51a602a2"
+      "sha256": "57597623a2118e5867963aa61a04cff7808eb5ce8e2aed5bebb5247cff6be8ad"
     },
     {
       "path": ".claude/commands/store-wisdom.md",
@@ -163,7 +167,7 @@
     },
     {
       "path": ".cursor/commands/infra.md",
-      "sha256": "24a6290a0905e744cc3d0adaf6f0d385b859e99eb8326367b6d55c7bcd66d559"
+      "sha256": "d6f7a7ee93f76a4d68aeb74c1f43aa76b969043ac59fbc22b02675e05a6dfee5"
     },
     {
       "path": ".cursor/commands/log-decision.md",
@@ -175,11 +179,11 @@
     },
     {
       "path": ".cursor/commands/overview.md",
-      "sha256": "33710e166d3fb4e9894df709708cd5dec997dfd7fb293931e3f9212567ee06cf"
+      "sha256": "9ee65f44d44362aaa37e5df7ed95eb7d386cec6e2045a2f87a81b80da343ac00"
     },
     {
       "path": ".cursor/commands/phase.md",
-      "sha256": "759d2d5946a9c05ade60dd5e8e47d8d94b7ab6b923be214eb5f5a9979ea6e94e"
+      "sha256": "5a2bac0d8dc36892256e49ddfd6bccac36e1d71dbc4cc0602ac337e398a0733e"
     },
     {
       "path": ".cursor/commands/quick.md",
@@ -187,7 +191,7 @@
     },
     {
       "path": ".cursor/commands/replan.md",
-      "sha256": "36b47315ba813702f71530402a6ffa7c4c404bbc946c0cda571ead61ddc28874"
+      "sha256": "3ad268b74c0218ae3530e3e7b86b75d9fd26bd98a79a74760efe767a63c251a2"
     },
     {
       "path": ".cursor/commands/store-wisdom.md",
@@ -230,16 +234,32 @@
       "sha256": "711bf59c9a1aa66846e1efd4a2127476edd8d92010207807e11e4080d430006e"
     },
     {
+      "path": "scripts/spec-staleness.sh",
+      "sha256": "1a2b2cad55ba0500c84ce8c2e582ccc4b735bb2fc7d7152969e37c6653297de4"
+    },
+    {
+      "path": "scripts/spec-conformance.sh",
+      "sha256": "932be0e02c47dba0d56bc3600cc8ad80031e54a13e65ba4e474fd957bab9f9fa"
+    },
+    {
+      "path": "tests/helpers/spec-assert.py",
+      "sha256": "dd63f979cecdfa54e808ace01da038f44acb3a29ea65c928bf0458fd2d44c8d8"
+    },
+    {
+      "path": "tests/helpers/spec-assert.ts",
+      "sha256": "feda86755bb58af7f75323e182136eb4e5d43e813358ed1a3d712bbc4e069069"
+    },
+    {
       "path": "create-anpunkit/package.json",
-      "sha256": "4b16cdfd4d9a22379147338664530fd7ce7f0e7566bf63d097f7b8f8f76dcdd8"
+      "sha256": "e283531b788e94cf9ca604a119e9d581e9cede3e1276770087f2c4874927e567"
     },
     {
       "path": "create-anpunkit/bin/cli.js",
-      "sha256": "129dae04923b6d380d3ca4601b5dcd2baa6ad4c51c827dddae3e43ea6a9c50e2"
+      "sha256": "f96460757110e6a0f81cef750c5b39442ea5589f53ae83b69951555632cce7ec"
     },
     {
       "path": "create-anpunkit/build.sh",
-      "sha256": "01fb6d1bb8866db54b0942d341b43e3f0ef96b97f7904909d77393fec49dbb58"
+      "sha256": "3a5062e46ba09ff23736de08545cefd1c0f30b216c3820bd2ada22e3d0db5b79"
     },
     {
       "path": "create-anpunkit/README.md",

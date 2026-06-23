@@ -17,6 +17,31 @@
 
 Newest first. One entry per architectural change. Appended by `/log-decision`.
 
+- **(v2.2)** — **Spec-driven behavioral contract.** Closes the v2.1 residual:
+  fabrication under a thin acceptance surface. In v2.1 a phase's whole contract was
+  a single `acceptance:` line; `implementer` and `test-author` each independently
+  elaborated it, and when both filled the same gap the same plausible-but-wrong way
+  the suite went green on a broken core — TEST REVIEW (review of *coverage*, after
+  RED) could not catch a faithful mapping to a *fabricated* criterion. The reframe:
+  the reviewable, authoritative artifact is the SPEC, not the test. New mechanism —
+  skeleton case-NAMES locked at `/overview` (planner) → per-phase concrete filling by
+  a new **`spec-author`** (real inputs/expecteds in shared `fixtures/`) → **SPEC
+  REVIEW** human gate UPSTREAM of code → tests GENERATED from the locked rows
+  (deep-equality + matcher tokens for `data`, Playwright-from-descriptor for `ui`),
+  sharing the same fixtures so a test cannot assert different values than the spec.
+  Two new orchestrator-procedure scripts (`spec-staleness.sh`, `spec-conformance.sh`)
+  replace the human TEST REVIEW gate. `test-author`/`e2e-runner` become harness
+  EMITTERS; `implementer` reads the filled spec as its contract (author ≠ implementer).
+  New decision entries §5.43–§5.56. New files: `.claude/agents/spec-author.md`,
+  `scripts/spec-staleness.sh`, `scripts/spec-conformance.sh`, `tests/helpers/
+  spec-assert.{py,ts}`, plus per-project `docs/spec-phase-<n>.md` + `fixtures/`.
+  REMOVED: the v2.1 human TEST REVIEW gate (humans no longer review tests).
+  NOTE: the v2.1 entries §5.33–§5.42 (TEST REVIEW gate, mandatory frontend E2E +
+  evidence, DATAFLOW coverage, datasource understanding, auth proof/liveness,
+  installer tool-selection) live in the v2.1 release bundle and the on-disk AGENTS.md
+  hard rules; they were never merged into this on-disk log (a hybrid file). The v2.2
+  decision numbers continue at §5.43 for continuity with the requirements doc.
+
 - **(v2.0.2)** — KB setup stays PATH-FIRST: the user clones the KB repo
   themselves (`git clone ... ~/anpunkit-kb`) and passes `--kb-path` (or the
   interactive prompt). New: the remote URL is auto-recorded from the clone's
@@ -452,6 +477,150 @@ native wiring).
 
 ---
 
+> **Numbering note (v2.2).** §5.33–§5.42 are the v2.1 decisions (TEST REVIEW gate,
+> mandatory frontend E2E + evidence, DATAFLOW transition coverage, datasource
+> understanding, auth proof/liveness, installer tool-selection). They were recorded
+> in the v2.1 release bundle and are reflected in AGENTS.md's hard rules, but were
+> never merged into this on-disk log. v2.2 continues at §5.43 for continuity with the
+> v2.2 requirements doc rather than renumbering.
+
+### 5.43 Spec file is a per-phase artifact, not inline in PLAN.md (v2.2)
+**Problem:** a phase's whole behavioral contract was one `acceptance:` line; two
+agents independently elaborated it and could agree on the same wrong contract.
+**Decision:** `docs/spec-phase-<n>.md` is a new per-phase artifact; `PLAN.md`'s
+`acceptance:` stays a one-line summary, the spec is its concrete expansion. The spec
+is self-correlating: a GENERATED header transcludes that phase's `acceptance:` line +
+the in-scope `DATAFLOW.md` transition rows and embeds a staleness hash; only the
+example-case table is human-authored. **Rejected:** expanding `acceptance:` inline in
+PLAN.md — couples the contract to `/replan` churn, bloats PLAN, mixes phase-ordering
+review with concrete-behavior review.
+
+### 5.44 Two-layer baseline/delta — case-names up front, values per phase (v2.2)
+**Decision:** lock behavior in two passes. (1) Up-front case-NAME contract at
+`/overview`: for every DATAFLOW transition + every acceptance criterion, enumerate
+the case names (happy / each edge / each failure + error code), no values yet —
+skeleton spec files. (2) Per-phase concrete filling at `/phase` start (after
+RESEARCH, before SCAFFOLD): `spec-author` fills real payloads/outputs grounded in
+fresh research + the confirmed datasource baseline. **Rationale:** the only design
+that gives BOTH "complete requirements locked before implementation" (names up front)
+and "values grounded in real facts, not plan-time guesses" (per-phase fill). Mirrors
+the established baseline/delta shape (datasource understanding, DATAFLOW coverage).
+
+### 5.45 Skeleton→filled single file; "no unfilled stub" is the conformance invariant (v2.2)
+**Decision:** skeletons are generated at `/overview` (names + `TBD`); `spec-author`
+fills in-place. Invariant: no `TBD` may remain when `spec-conformance.sh` runs
+(between RED and GREEN). **Consequence:** a case that cannot be filled from research
+is escalated as UNDERSPEC / `CASE-SET-DIVERGENCE` BEFORE SCAFFOLD, not discovered at
+GREEN.
+
+### 5.46 Case structure: table row + boundary-typed fixture-ref (v2.2)
+**Decision:** each case is one row — `case-id | covers | boundary | input-ref |
+expected-ref | error-code | volatile`. `covers` = a DATAFLOW transition-id
+(convention `Object:from->to`, no new DATAFLOW column) or acceptance criterion-id
+(`ACC-<k>`). `boundary` ∈ {`data`,`ui`}. Refs point to `fixtures/<case-id>-*.json`
+(scalars may inline). **Key property:** the harness loads the SAME fixture files the
+spec row references — transcription from spec to test is STRUCTURAL, not honor-system;
+a test physically cannot assert different values than the spec.
+
+### 5.47 Boundary test is system-of-record per case; optional mock mirror (v2.2)
+**Decision:** every case has exactly one BOUNDARY test — `data`: real
+HTTP/CLI/message vs the running backend + real services (v2.1's "real API suite");
+`ui`: Playwright vs the deployed/local-docker target (v2.1's E2E). The boundary test
+is the phase gate; green mock alone never closes (rule 5 / §5.38 preserved). A mock
+mirror is optional, shares the fixture + comparator via `TEST_MODE`. "E2E" is
+generalized to *outer-boundary*, not browser-specific: on `has_frontend: false` all
+cases are `data` and `ui` rows are invalid.
+
+### 5.48 Human TEST REVIEW removed; assertion is generated deep-equality (v2.2)
+**Decision:** remove the v2.1 human TEST REVIEW gate. Humans never review tests.
+Tests are not authored — a harness generator emits a deep-equality assertion against
+`fixtures/<case-id>-expected.json` per case row. SPEC REVIEW (§5.50) is the
+human gate; it sits upstream (before SCAFFOLD), reviews concrete behavior in plain
+language, and is the correctness-bearing moment TEST REVIEW was not (wrong thing,
+wrong layer: TEST REVIEW reviewed coverage and asked humans to read assertions).
+
+### 5.49 Volatile fields use matcher tokens in the fixture (v2.2)
+**Decision:** volatile fields (generated IDs, timestamps, order, cursors) are matched
+by TYPE, not excluded. The expected fixture carries sentinels — `<UUID>`, `<ISO8601>`,
+`<ANY_STRING>`, `<ANY_NUMBER>`, `<UNORDERED>`, `<MATCHES:regex>`. The per-language
+comparator `tests/helpers/spec-assert.*` honors them. A token asserts PRESENCE +
+SHAPE, never "ignore this field" (a missing volatile field still fails). The
+comparator is bounded + kit-versioned (one impl per supported language); no
+per-project comparator code.
+
+### 5.50 SPEC REVIEW — per-phase human gate on concrete fillings (v2.2)
+**Decision:** after `spec-author` fills + `spec-staleness.sh` passes, the orchestrator
+surfaces filled cases as FALSIFIABLE CLAIMS; the human confirms/corrects. Rejection
+classification: wrong expected → fix row + fixture (no re-research); wrong input shape
+→ re-dispatch `spec-author`; new case OR contradicted case → hard re-entry (§5.52).
+Unskippable on TDD phases; absent on non-TDD. Replaces v2.1 human TEST REVIEW.
+
+### 5.51 Up-front case-name completeness folded into existing /overview approval (v2.2)
+**Decision:** the existing end-of-`/overview` approval (PLAN.md + DATAFLOW.md) is
+EXTENDED to confirm the cross-phase skeleton case-name set (per phase: covered
+transition/acceptance ids + enumerated case names, no values). One confirmation, one
+surface, no new gate — the names derive from the same PLAN + DATAFLOW being approved.
+
+### 5.52 Any case-set divergence at phase time → hard re-entry (v2.2)
+**Decision:** if phase-time RESEARCH reveals a case not enumerated up front, or one
+that contradicts an enumerated case (locked contract impossible), the phase STOPS.
+`spec-author` returns `CASE-SET-DIVERGENCE`; the human amends the up-front skeleton;
+re-confirms the amended case(s) + any case sharing their `covers` id (the staleness
+hash certifies the unchanged remainder — not re-read); `spec-author` re-fills from
+scratch. **Rationale:** AI writes code; the human owns the contract. No fold-forward,
+no AI amendment of the case-name set.
+
+### 5.53 Dedicated spec-author agent; author ≠ implementer invariant (v2.2)
+**Decision:** a new `spec-author` (Opus) fills the per-phase spec + fixtures after
+RESEARCH, before SPEC REVIEW; returns `CASE-SET-DIVERGENCE` when a case can't be
+filled from real facts or research reveals an unlisted branch. It is NOT
+`implementer`. The **author ≠ implementer** invariant replaces v2.1's test-author
+blindness invariant: `implementer` reads the filled spec as its contract (normal
+spec-driven development), `test-author` becomes a harness emitter (reads spec rows,
+generates the assertion harness, authors no assertions).
+
+### 5.54 UI boundary cases use generated Playwright; e2e-runner is an emitter (v2.2)
+**Decision:** for `ui` cases, `e2e-runner` stops authoring blind and EMITS a
+Playwright assertion from the case's `fixtures/<case-id>-ui.json` descriptor. The
+descriptor vocabulary is closed + kit-versioned: `visible`, `text-equals`, `enabled`,
+`count`. Screenshot-on-each-UI-existence-assertion (v2.1 §5.35) is retained as the
+visual backstop. `ui` cases have no mock mirror (the browser is the boundary). On
+`has_frontend: false`, `ui` rows are invalid.
+
+### 5.55 spec-staleness.sh + spec-conformance.sh as orchestrator-procedure scripts (v2.2)
+**Decision:** two new scripts, same idiom as `regression.sh` (`set -euo pipefail`,
+nonzero = loud fail). `spec-staleness.sh` re-hashes the current PLAN acceptance line +
+in-scope DATAFLOW rows and compares to the spec's embedded header hash (`stamp`
+subcommand embeds it at `/overview`/regenerate; default `check` compares); runs after
+SPEC fill + at SPEC REVIEW entry. `spec-conformance.sh` asserts no `TBD` remains and
+every case-id is cited by a boundary test (`# spec: <case-id>`); runs between RED and
+GREEN, replacing the human TEST REVIEW gate. Both port to Cursor for free (same
+`/phase` body, same bash scripts — no new hook wiring). **Design choice (impl):**
+hashing lives ONLY in the script (a `stamp` subcommand), not duplicated in agent
+prompts; transition-ids are derived (`Object:from->to`) so DATAFLOW needs no new column.
+
+### 5.56 Rule 14 re-seamed: transition→case reachability; conformance owns case→test (v2.2)
+**Decision:** v2.1 rule 14 (DATAFLOW transition coverage) is re-seamed. New
+responsibility: every reachable DATAFLOW transition must have ≥1 FILLED CASE in
+`docs/spec-phase-<n>.md` (was: ≥1 test in `tests/regression/`). Reachability judgment
+unchanged (orchestrator decides at CLOSE; unreachable list PENDING; all live by final
+phase or FAIL HARD). The case→test half moves to `spec-conformance.sh` (every case-id
+cited by a boundary test, which by placement convention lands in `tests/regression/`).
+The full guarantee is preserved by the chain: reachable transition → filled case
+(rule 14) → cited boundary test (conformance) → regression corpus (placement). The
+ENDPOINTS coverage gate is unchanged and orthogonal (endpoint-keyed vs behavior-keyed).
+
+**Numbering reconciliation (v2.2).** The requirements doc's hard-rule table labeled
+new rules 12–16, but its own "Non-changes" section retains the frontend-E2E (old 13),
+datasource (old 15) and auth (old 16) rules — so the table is illustrative, not literal.
+AGENTS.md realizes a coherent set: rule **12** = SPEC REVIEW (reuses the slot freed by
+the removed TEST REVIEW); rule **14** = re-seamed DATAFLOW (kept in place); rules
+**13/15/16** keep their v2.1 meanings (frontend E2E / datasource / auth); the remaining
+new rules append as **17** (spec staleness), **18** (spec conformance), **19** (author ≠
+implementer). This preserves every existing `hard rule N` cross-reference except 12.
+
+---
+
 ## 6. Current file inventory
 ```
 
@@ -542,6 +711,24 @@ create-anpunkit/                   npx package (package.json, bin/cli.js, build.
 ownership taxonomy, adapter generation, idempotent JSON hook merge, VERIFY,
 backup, `--dry-run`).
 
+### v2.2 additions to the inventory
+
+```
+.claude/agents/spec-author.md      NEW — fills per-phase spec + fixtures (Opus); author ≠ implementer
+scripts/spec-staleness.sh          NEW — stamp/check the spec header hash vs PLAN+DATAFLOW (rule 17)
+scripts/spec-conformance.sh        NEW — no-TBD + every case-id cited by a boundary test (rule 18)
+tests/helpers/spec-assert.py       NEW — kit comparator (matcher tokens), Python
+tests/helpers/spec-assert.ts       NEW — kit comparator (matcher tokens), TS/JS
+docs/spec-phase-<n>.md             NEW per-project — skeleton at /overview, filled per phase (committed)
+fixtures/<case-id>-*.json          NEW per-project — shared by spec row + generated harness (committed)
+```
+
+Role deltas: `planner` also writes skeleton specs; `test-author` + `e2e-runner`
+become harness EMITTERS (generate from spec rows, author no assertions);
+`implementer` FILL reads the filled spec as its contract. `.gitattributes` gains
+`*.py text eol=lf` (the kit now ships a Python comparator). REMOVED: the v2.1 human
+TEST REVIEW gate + the `docs/test-plan-phase-<n>.md` artifact.
+
 ## 7. How each original problem maps to its fix
 
 | Problem | Fix |
@@ -587,7 +774,11 @@ backup, `--dry-run`).
 4. The phase gate is a REAL test. A mock suite never closes a phase.
 5. Noisy work writes full output to `docs/research/` and returns only
    terse summary + path — keeps the orchestrator context clean.
-6. Tests are written blind — this is the unbiased-test guarantee.
+6. The behavioral contract is the human-approved SPEC; tests are GENERATED from its
+   case rows against shared fixtures (author ≠ implementer). This is the v2.2
+   unbiased-test guarantee — it replaces v2.1's "tests written blind" (the spec
+   fixtures are authored before code, so the contract can't be shaped to an impl).
+   (Non-TDD phases keep blind-from-acceptance tests — no spec to drive them.)
 7. Never script the Microsoft login UI.
 8. Fail loud, never silent — especially hook wiring.
 9. Honest failure classification — environment issues never burn the debug budget.

@@ -17,6 +17,7 @@ The roles defined in AGENTS.md map to these Claude Code subagent files:
 |researcher        |`.claude/agents/researcher.md`        |haiku     |
 |planner           |`.claude/agents/planner.md`           |opus      |
 |infra-provisioner |`.claude/agents/infra-provisioner.md` |opus      |
+|spec-author       |`.claude/agents/spec-author.md`       |opus      |
 |implementer       |`.claude/agents/implementer.md`       |opus      |
 |test-author       |`.claude/agents/test-author.md`       |opus      |
 |e2e-runner        |`.claude/agents/e2e-runner.md`        |opus      |
