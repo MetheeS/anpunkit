@@ -1,7 +1,7 @@
 {
   "name": "create-anpunkit",
-  "version": "2.2.0",
-  "description": "Scaffold the anpunkit AI-coding workflow (Claude Code + Cursor) into a project. Upgrade-safe, non-destructive.",
+  "version": "2.3.0",
+  "description": "Scaffold the anpunkit AI-coding workflow (Claude Code) into a project. Upgrade-safe, non-destructive.",
   "bin": {
     "create-anpunkit": "bin/cli.js"
   },
@@ -24,7 +24,6 @@
   "author": "Methee S. (Pun) <methee84@gmail.com> (https://github.com/MetheeS)",
   "keywords": [
     "claude-code",
-    "cursor",
     "agents",
     "tdd",
     "workflow",

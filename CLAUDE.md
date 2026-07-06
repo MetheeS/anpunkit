@@ -35,12 +35,6 @@ hooks (wired in `.claude/settings.json`) perform them:
   live position before compaction.
 - **SubagentStop** (`.claude/hooks/subagent-stop.sh`) writes a subagent trace.
 
-The same script bodies are wired for Cursor in `.cursor/hooks.json`; only the
-wiring differs (Cursor's sessionStart expects JSON output, so it runs the shared
-body through the `cursor-session-start.sh` envelope wrapper). Cursor also reads
-`.claude/agents/*.md` natively for subagents — one set of role files serves both
-tools.
-
 ## /clear keeps hooks
 
 `/clear` does not drop hooks — the wiring lives in `settings.json`, not in
@@ -48,9 +42,10 @@ context. After `/clear`, SessionStart fires again and re-injects state.
 
 ## Skills resolution
 
-- `karpathy-guidelines` — kit-owned (`.claude/skills/karpathy-guidelines/`).
-- `caveman`, `grill-me` — global-authoritative if installed; the vendored copies
-  under `.claude/skills/` are a fallback only.
+- `karpathy-guidelines`, `grill-me` — kit-owned (`.claude/skills/…`), the sole
+  source. No "global-authoritative if installed" resolution.
+- Compression is kit-native (`.claude/ref/compression.md`), NOT a skill — always
+  on, single source, never model-invoked.
 
 ## Platform notes
 

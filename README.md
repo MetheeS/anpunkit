@@ -1,14 +1,18 @@
 # anpunkit — AI-coding system development workflow
 
-A reusable, self-navigating workflow for **Claude Code and Cursor**. Install with
-one `npx` command, or clone it directly into your project.
+A reusable, self-navigating workflow for **Claude Code**. Install with one `npx`
+command, or clone it directly into your project.
 
 ## Why
 
 Codifies a `design-research -> grill -> plan -> implement -> test -> deploy` loop
-with vertical-slice phases, blind testing, agent orchestration, automatic context
-hygiene, and Azure infrastructure as a first-class Phase 0 — so the workflow runs
-itself instead of being hand-steered every session.
+with vertical-slice phases, blind testing, agent orchestration, and automatic
+context hygiene — so the workflow runs itself instead of being hand-steered every
+session. The invariant core (loop, gates, doc system, commands) is use-case
+agnostic; web/Azure practice ships as **preinstalled knowledge docs**
+(`knowledge/webapp.md`, `knowledge/azure.md`) that the researcher consults only
+when your declared project type calls for them. Works for web apps, desktop apps,
+scripts, and libraries alike.
 
 ## The core idea
 
@@ -22,20 +26,22 @@ Putting "read the issue log" in a hook is why it stops getting skipped.
 ```bash
 cd my-project
 npx create-anpunkit            # non-destructive: never clobbers your files
-# then open Claude Code or Cursor — the session-start hook fires automatically
-/overview                      # bootstrap the project (includes Phase 0 infra)
+# then open Claude Code — the session-start hook fires automatically
+/overview                      # bootstrap the project (declares project type + flags)
 ```
-Useful flags: `--dry-run` (print the per-tool plan, write nothing), `--force`
-(overwrite user-modified kit files), `--tools <claude,cursor>` (install only the
-selected tools' files; interactive menu if omitted on a fresh TTY install),
-`--add-tool <name>` (lay down an additional tool's files into an existing
-project), `--kb-path <dir>` (your pre-cloned KB repo; remote auto-recorded from
-its origin) / `--no-kb`.
+Useful flags: `--dry-run` (print the plan, write nothing), `--force` (overwrite
+user-modified kit files), `--kb-path <dir>` (your pre-cloned KB repo; remote
+auto-recorded from its origin) / `--no-kb`.
 
 Upgrading an existing anpunkit project? Re-run `npx create-anpunkit`. It refreshes
 kit-owned files, preserves anything you modified as `<file>.anpunkit-new`, merges
-hook config into your existing `settings.json` / `.cursor/hooks.json`, and writes a
-timestamped `.anpunkit-backup-*/` first.
+hook config into your existing `.claude/settings.json`, and writes a timestamped
+`.anpunkit-backup-*/` first.
+
+> **Upgrading from v2.2 (Cursor dropped):** v2.3 is Claude Code only. After
+> upgrading you may safely delete the now-orphaned `.cursor/`,
+> `.claude/hooks/cursor-session-start.sh`, and `.claude/anpunkit-tools.json` —
+> setup.sh no longer manages them.
 
 **Kit developers — clone + `setup.sh`:**
 ```bash
@@ -50,8 +56,8 @@ cd my-project && bash setup.sh
 
 |Command          |Does                                                                          |
 |-----------------|------------------------------------------------------------------------------|
-|`/overview`      |design-research → RESEARCH REVIEW → grill (×2, incl. data/state flow) → OVERVIEW + DATAFLOW → PLAN (Phase 0 first) → STATE|
-|`/infra`         |provision Azure infra: Bicep → what-if → review → apply → INFRA.md + .env.test → AUTH PROOF|
+|`/overview`      |design-research → RESEARCH REVIEW → grill (×2, incl. data/state flow) → OVERVIEW (+ project flags) + DATAFLOW → PLAN → STATE|
+|`/infra`         |provision infra (when `infra_needed`): IaC → what-if → review → apply → INFRA.md + .env.test → AUTH PROOF|
 |`/phase [n]`     |run one phase: research → SPEC fill → SPEC REVIEW → SCAFFOLD → RED → conformance → GREEN → boundary/E2E, with circuit breaker|
 |`/quick [change]`|small obvious change, direct, no agent chain                                  |
 |`/unstuck`       |deep re-research after a circuit breaker (you trigger it)                     |
@@ -70,7 +76,16 @@ cd my-project && bash setup.sh
 
 The main session is the orchestrator — it routes, it does not implement.
 
-## The loop (v2.2: spec-driven contract + upstream human gate + generated tests)
+## The loop (v2.3: adaptive to project type + spec-driven contract + upstream human gate)
+
+**Project flags (declared at `/overview`).** The grill asks your `project_type`
+(web app / desktop app / script / library / other) and what "shipped" means. From
+that it derives `infra_needed`, `e2e_kind` (browser / cli / http / library-api),
+`deploy_kind` (cloud-deploy / package-publish / install-run-verified / none), and
+which `knowledge_docs` to consult — all recorded in `docs/OVERVIEW.md`, never
+inferred mid-phase. Phase 0 (infra) exists only when `infra_needed`; the boundary
+run is selected by `e2e_kind`; the final phase completes `deploy_kind`.
+
 
 Phases that add a public callable surface run spec-first:
 `RESEARCH -> SPEC fill -> spec-staleness -> SPEC REVIEW -> SCAFFOLD -> RED -> spec-conformance -> GREEN -> boundary/E2E -> FIX -> CLOSE`.
@@ -115,37 +130,22 @@ Methodology lives in one place: the portable **`AGENTS.md`** at the repo root.
 
 |Tool          |What you get                                                                                          |
 |--------------|------------------------------------------------------------------------------------------------------|
-|**Claude Code** (full, reference)|commands, all 3 lifecycle hooks **with context injection**, named subagents, shared KB, `@AGENTS.md` import|
-|**Cursor** (full)|generated commands (`.cursor/commands/`), lifecycle hooks (`.cursor/hooks.json`: sessionStart / preCompact / subagentStop), methodology via a `.cursor/rules/` pointer to `AGENTS.md`|
-|**Other tools**|read `AGENTS.md` if they support the open standard; no generated adapters; not claimed as supported in v2.0|
+|**Claude Code** (the supported target)|commands, all 3 lifecycle hooks **with context injection**, named subagents, shared KB, `@AGENTS.md` import|
+|**Other tools**|read `AGENTS.md` if they support the open standard; no generated adapters, no support claim|
 
-One canonical command body in `commands.src/<name>.md` generates both tools' command sets at install.
+The canonical command bodies live in `commands.src/<name>.md`, copied to
+`.claude/commands/` at install. **Cursor support was dropped in v2.3** (§5.69) —
+the maintenance cost exceeded demand. v2.3 is Claude Code only.
 
-**Cursor — verified against cursor.com/docs (June 2026):**
-- **sessionStart context injection: works.** Cursor's `sessionStart` hook accepts an
-  `additional_context` JSON output field injected into the conversation's initial
-  context. Cursor expects JSON (Claude injects raw stdout), so the shipped wiring
-  runs the shared body through `cursor-session-start.sh`, a thin JSON-envelope
-  wrapper. The hook is fire-and-forget (non-blocking).
-- **Named subagents: work natively.** Cursor reads `.claude/agents/*.md` directly
-  (documented Claude-compatibility path), with `/name` invocation and
-  description-based delegation — one set of role files serves both tools.
-  Caveat: `model: haiku/opus` tiers are Claude-specific; Cursor falls back to
-  `inherit`/a compatible model.
-- **Hook path resolution: project hooks run from the project root** (not
-  `.cursor/`), so the shipped wiring uses `bash .claude/hooks/<script>.sh`. Cursor
-  sets `CLAUDE_PROJECT_DIR` as a compatibility alias, so the shared scripts run
-  unchanged.
-- **preCompact is observational** in Cursor (cannot modify compaction); the
-  snapshot side-effect still runs, which is all the COMPRESS ritual needs.
+## Compression
 
-> Note: Cursor can also load `.claude/settings.json` hooks directly ("Third-party
-> skills" toggle). anpunkit does not rely on this — it requires a manual settings
-> toggle (silent no-op if forgotten) and would double-fire hooks alongside
-> `.cursor/hooks.json`. The explicit native wiring is the supported path.
-
-Codex is **not** a target in v2.0 (its repo-committed command path is deprecated
-home-dir custom-prompts with a divergent UX).
+Output compression is a kit-native, always-on facility (`.claude/ref/compression.md`),
+not a skill and never model-invoked. Two profiles: `user` (human-facing, keeps the
+Auto-Clarity exception for security warnings, irreversible-action confirmations,
+multi-step sequences, and clarification requests) and `internal` (agent↔agent,
+harder). `AGENTS.md` declares `user`; every subagent prompt points at `internal`.
+Exact-output artifacts (fixtures, spec rows, generated tests) are exempted by
+structural gates in the emitter prompts.
 
 ## How each problem is solved
 
@@ -157,10 +157,10 @@ home-dir custom-prompts with a divergent UX).
 |Context rot during debugging               |`researcher` + `debugger` write full output to `docs/research/`, return only a summary + path|
 |Want orchestration                         |8 scoped subagents; `/phase` is the orchestrator routing them                                |
 |Handoff / memory keeps growing             |`synthesizer` + PreCompact hook compress and dedup                                           |
-|Azure auth friction per session            |`scripts/auth-setup.sh` — one token check, once per session                                  |
-|Infra created ad-hoc mid-phase             |`infra-provisioner` + Phase 0 — provisioned once, reviewed before apply                      |
-|Planning without domain knowledge          |design-researcher runs before planning; double grill absorbs findings                        |
-|Deployment not in the plan                 |planner always puts deploy task in last phase                                                |
+|Cloud auth friction per session            |liveness ritual recorded in INFRA.md `## AUTH` (Azure: `knowledge/azure.md`) — one check per session|
+|Infra created ad-hoc mid-phase             |`infra-provisioner` + Phase 0 when `infra_needed` — provisioned once, reviewed before apply  |
+|Planning without domain knowledge          |design-researcher runs before planning; consults matching `knowledge/*.md`; double grill absorbs findings|
+|Deployment not in the plan                 |planner always puts the `deploy_kind` completion task in the last phase                      |
 |No endpoint summary at project end         |final-phase close shows usage endpoints from docs/ENDPOINTS.md                               |
 |Re-discovering same gotchas across projects|`/store-wisdom` promotes findings to shared KB; researcher checks KB before web              |
 
@@ -168,17 +168,19 @@ home-dir custom-prompts with a divergent UX).
 
 - `docs/STATE.md` — current position, kept small (rewritten each phase)
 - `docs/ISSUES.md` — error log, deduped by synthesizer
-- `docs/PLAN.md` — vertical-slice phase plan (Phase 0 always first)
+- `docs/PLAN.md` — vertical-slice phase plan (Phase 0 first when `infra_needed`)
 - `docs/HISTORY.md` — one line per finished phase
 - `docs/OVERVIEW.md` — project scope, written after double-grill
 - `docs/DATAFLOW.md` — state-transition table per key object (grilled at /overview; drives CLOSE coverage gate)
 - `docs/spec-phase-<n>.md` — per-phase behavioral contract (skeleton at /overview, filled by spec-author; human-reviewed at SPEC REVIEW)
 - `fixtures/<case-id>-{input,expected,ui}.json` — shared by the spec row and the generated test harness (committed; part of the contract)
 - `tests/helpers/spec-assert.{py,ts}` — kit-versioned matcher-aware comparator (honors `<UUID>`, `<ISO8601>`, … tokens)
-- `docs/INFRA.md` — Azure resource manifest + cost estimates (written by infra-provisioner)
+- `docs/INFRA.md` — infra resource manifest + cost estimates (when `infra_needed`; written by infra-provisioner)
 - `docs/ENDPOINTS.md` — API/service endpoint catalogue (maintained by implementer)
 - `docs/.snapshots/` — pre-compact recovery markers (auto-pruned, gitignored)
-- `infra/` — Bicep templates (generated by infra-provisioner, committed to git)
+- `knowledge/webapp.md`, `knowledge/azure.md` — preinstalled matured practice + materializable templates
+- `.claude/ref/compression.md` — kit-native compression profiles (`user`, `internal`)
+- `infra/` — IaC templates (generated by infra-provisioner, committed to git)
 
 ## Shared Knowledge Base (optional)
 
@@ -216,8 +218,8 @@ See `docs/KB_GUIDE.md` in the anpunkit-kb repo (created by first `/store-wisdom`
 
 ```
 /overview                    once per project (design-research + double grill)
-/infra                       once per project (Phase 0) — after /overview
-scripts/auth-setup.sh        once per session (Azure projects)
+/infra                       once per project (Phase 0) — only when infra_needed
+<INFRA.md AUTH command>      once per session (infra projects; Azure: scripts/auth-setup.sh)
 /phase 1   ->  /synthesize  ->  /clear
 /phase 2   ->  /synthesize  ->  /clear
 ...
@@ -227,83 +229,50 @@ scripts/auth-setup.sh        once per session (Azure projects)
 # learned something worth keeping?  ->  /store-wisdom
 ```
 
-## Azure infrastructure (Phase 0)
+## Use-case knowledge (infra, E2E, deploy)
 
-The kit treats Azure infra as **Phase 0** — provisioned once before any code
-phase starts, owned by the `infra-provisioner` subagent.
+The invariant core ships nothing use-case specific. Matured web/Azure practice
+lives in **preinstalled knowledge docs** that the `researcher` consults at RESEARCH
+when your declared `project_type` matches (recorded in OVERVIEW `knowledge_docs`):
 
-### Phase 0 flow
+- **`knowledge/webapp.md`** — browser E2E practice (Playwright, closed assert
+  vocabulary, screenshot evidence) plus the E2E stack ritual and the
+  `playwright.config.ts` / `e2e/global-setup.ts` / `docker-compose.test.yml` /
+  `scripts/e2e-stack.sh` templates, materialized into your project on demand.
+- **`knowledge/azure.md`** — the once-per-session auth ritual (`scripts/auth-setup.sh`
+  template), Entra/MSAL ROPC + MFA-excluded test account practice, and the Bicep /
+  `az` provisioning patterns (Key Vault, THB cost annotations, SEA region default).
+
+### Infra (Phase 0, when `infra_needed`)
+
+Application project types (web app, desktop app, service) set `infra_needed: true`;
+scripts and libraries set it false and skip Phase 0 entirely. When present, Phase 0
+is provisioned once before any code phase, owned by `infra-provisioner`:
 
 ```
-/overview          # includes Phase 0 in PLAN.md automatically
-/infra             # generates Bicep -> what-if diff -> you review -> "go" -> apply
-                   # writes docs/INFRA.md (resource manifest + cost estimates)
+/overview          # declares infra_needed; includes Phase 0 in PLAN.md when true
+/infra             # generates IaC -> what-if diff -> you review -> "go" -> apply
+                   # writes docs/INFRA.md (resource manifest + cost estimates + ## AUTH)
                    # writes .env.test (generated, never fill manually)
                    # runs AUTH PROOF (every credential proven reusable headlessly)
 /phase 1           # PRE-FLIGHT checks Phase 0 is done before starting
 ```
 
-### Session startup (Azure projects)
+Cloud specifics (Azure `az`/Bicep commands, region/cost conventions, the session
+auth ritual) live in `knowledge/azure.md`, consulted by `infra-provisioner`.
 
-Run once per session before any Azure work:
+### Boundary testing (per `e2e_kind`)
 
-```bash
-scripts/auth-setup.sh
-```
+The boundary run is selected by the phase's bound `e2e_kind`:
 
-Checks your `az` token is fresh and the right subscription is active.
-Prompts `az login` only if stale. No credential storage — your account only.
+- **browser** (frontend phases): `e2e-runner` emits Playwright from each `ui` case's
+  descriptor and captures a screenshot at every UI-existence assertion — on success
+  too — to a gitignored `docs/evidence/` dir. Stack ritual + templates:
+  `knowledge/webapp.md`.
+- **cli / http / library-api**: the phase's real-mode boundary suite runs against
+  the shipped outer surface, transcript captured as evidence.
 
-### What /infra does
-
-1. `infra-provisioner` reads `docs/OVERVIEW.md` for the system design
-1. Generates `infra/main.bicep` + per-service modules under `infra/modules/`
-1. Runs `az deployment what-if` — shows exactly what will be created
-1. **Stops and waits for your "go"** — nothing applied without your review
-1. Applies the deployment
-1. Writes `docs/INFRA.md` — resource IDs, endpoints, cost estimates (THB, SEA region)
-1. Generates `.env.test` from the manifest
-1. Runs the **AUTH PROOF** — proves every credential (Entra/MSAL + datasources) is obtainable headlessly twice in a row
-
-Re-run `/infra` any time infra drifts or a new resource is needed.
-Re-run `/infra regenerate-env` to refresh `.env.test` only.
-Re-run `/infra auth-proof` to re-prove credentials on demand.
-
-### Cost awareness
-
-`infra-provisioner` annotates every resource in `INFRA.md` with an estimated
-monthly cost. It uses production-appropriate SKUs by default — not artificially
-cheap dev tiers that need resizing before go-live.
-
-### E2E target
-
-`infra-provisioner` determines the E2E target from the system design:
-
-- **azure-deployed**: `E2E_STACK_EXTERNAL=1` — Playwright hits your deployed Azure app.
-- **local-docker**: Containers run the app, pointed at real Azure services.
-
-### Test data
-
-Seeding and cleanup are **deployment phase** concerns, not E2E concerns.
-`e2e-stack.sh` has no seed/cleanup commands.
-
-## End-to-end testing
-
-Three layers: unit/integration (mock suite), real API (`test-author`), and
-functional browser E2E (`e2e-runner`, Playwright).
-
-**Phase gate:** a frontend-touching phase closes only when the real API suite
-AND the browser E2E suite pass with screenshot evidence. Mock-green alone never closes a phase.
-
-**MSAL / Entra ID auth.** Browser E2E never drives the Microsoft login UI.
-`e2e/global-setup.ts` uses ROPC flow with a dedicated test account (MFA excluded
-via Conditional Access) to fetch a real token and inject it into the MSAL cache.
-
-**E2E setup (one-time per project):**
-
-1. Run `/infra` — it generates `.env.test` automatically and runs the AUTH PROOF.
-1. Provision the Entra test user + Conditional Access MFA exclusion.
-1. `npm i -D @playwright/test && npx playwright install chromium`
+Mock-green alone never closes a phase.
 
 ## Windows / Git Bash
 

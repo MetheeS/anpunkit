@@ -3,7 +3,7 @@ description: Run one phase end-to-end. TDD phases run SPEC fill -> SPEC REVIEW -
 argument-hint: [phase number]
 ---
 
-Caveman ULTRA mode. You are the ORCHESTRATOR. Route work to subagents —
+compression: user (.claude/ref/compression.md). You are the ORCHESTRATOR. Route work to subagents —
 you do NOT implement, fill specs, or debug yourself.
 
 Note: subagents cannot talk to the user. Only YOU can.
@@ -14,8 +14,9 @@ Target phase: $ARGUMENTS  (default: the phase marked pending in docs/PLAN.md)
 
 ## 0. PRE-FLIGHT
 
-a. INFRA CHECK (phases > 0):
-   - Read docs/INFRA.md. If Phase 0 not done -> STOP.
+a. INFRA CHECK (phases > 0): read docs/OVERVIEW.md `infra_needed`.
+   - `infra_needed: false` -> no Phase 0 exists; SKIP this check entirely.
+   - `infra_needed: true`: read docs/INFRA.md. If Phase 0 not done -> STOP.
      Tell me: "Phase 0 (infra) not complete. Run `/infra` first."
    - Exception: if $ARGUMENTS is "0", tell me to run `/infra` directly.
 
@@ -29,13 +30,14 @@ b. PHASE STATE CHECK: Read docs/STATE.md and docs/PLAN.md.
 c. FINAL PHASE CHECK: Read docs/PLAN.md. Is this the last phase (no further
    pending phases after this one)? Record this as IS_FINAL_PHASE=true/false.
 
-d. AUTH LIVENESS GATE (hard rule 16): if this phase will run a boundary/E2E suite,
-   confirm every credential it needs is live NOW.
+d. AUTH LIVENESS GATE (hard rule 16): only if this phase touches a credentialed
+   external service and will run a boundary/E2E suite. Skip otherwise.
    - If INFRA.md has no `AUTH PROOF: PASS` marker -> STOP: "Auth never proven
      reusable. Run `/infra` first."
-   - Run `scripts/auth-setup.sh --check` (Entra token obtainable + not expired)
-     and, for each external system this phase touches (docs/DATAFLOW.md external
-     rows + docs/ENDPOINTS.md auth column), confirm its credential is obtainable
+   - Run the liveness command recorded in docs/INFRA.md `## AUTH` (Azure projects:
+     the ritual per `knowledge/azure.md`, i.e. `bash scripts/auth-setup.sh`) and,
+     for each external system this phase touches (docs/DATAFLOW.md external rows +
+     docs/ENDPOINTS.md auth column), confirm its credential is obtainable
      headlessly. Any failure -> boundary/E2E is BLOCKED; tell me what to run; the
      MOCK suite may still proceed.
 
@@ -44,6 +46,10 @@ e. FRONTEND TRIGGER (hard rule 13): read docs/OVERVIEW.md `has_frontend` + the
    phase's `changes` (docs/PLAN.md) include any path under the frontend root.
    This is a PATH MATCH, not a judgment call. Record FRONTEND_PHASE — it gates the
    `ui` boundary run + evidence at CLOSE.
+
+f. FLAG BASELINES: read docs/OVERVIEW.md `e2e_kind` + `deploy_kind`. These are the
+   project baselines; §1 binds this phase's effective E2E_KIND and (final phase)
+   confirms DEPLOY_KIND.
 
 ---
 
@@ -74,6 +80,11 @@ Then classify the phase:
 - AMBIGUOUS -> default `TDD_PHASE=true`, but STATE the classification + the reason
   to me, so I can override to non-TDD BEFORE SPEC fill fires. (Hard rule 11: never
   downgrade a TDD phase just to dodge the gates.)
+
+FLAG BINDING (hard rule 10): bind this phase's effective E2E_KIND — `browser` iff
+FRONTEND_PHASE, else the OVERVIEW `e2e_kind` baseline. If IS_FINAL_PHASE, restate
+`deploy_kind` and confirm the final phase's deploy task realizes it. STATE both
+bindings. Divergence from OVERVIEW is mine to resolve — never silently re-derived.
 
 =====================================================================
 ## TDD PATH  (TDD_PHASE=true)
@@ -160,11 +171,16 @@ fixtures + research + the generated test file paths (it MAY read the tests — f
 before logic, no overfit — but must NOT edit tests, spec, or fixtures). Fill to
 green against the spec. Budget 3, WARN@2, STUCK@3.
 
-Run the BOUNDARY suite (real HTTP/CLI/message; `TEST_MODE=real`). If FRONTEND_PHASE,
-`e2e-runner` runs its emitted `ui` specs — MANDATORY (hard rule 13) — reads INFRA.md
-target, runs `scripts/e2e-stack.sh up` / Playwright / `down`, and captures a
-screenshot at EACH UI-existence assertion regardless of pass/fail to
-docs/evidence/e2e-phase-<n>/, with a summary in docs/research/e2e-<slug>.md.
+Run the BOUNDARY suite (real HTTP/CLI/message; `TEST_MODE=real`) — the outer surface
+per this phase's bound E2E_KIND. Capture evidence (hard rule 13):
+- `browser` (FRONTEND_PHASE): dispatch `e2e-runner` to run its emitted `ui` specs —
+  MANDATORY — reads INFRA.md target, runs the stack ritual per `knowledge/webapp.md`
+  (`scripts/e2e-stack.sh up` / Playwright / `down`), captures a screenshot at EACH
+  UI-existence assertion regardless of pass/fail to docs/evidence/e2e-phase-<n>/,
+  with a summary in docs/research/e2e-<slug>.md.
+- `cli` / `http` / `library-api`: the real-mode boundary suite IS the outer run;
+  capture its transcript (invocation + result) to docs/evidence/e2e-phase-<n>/.
+  No separate emitter is dispatched.
 
 PHASE GATE (rule 5) -> go to §8/§9/§10 (see GATE below).
 
@@ -177,7 +193,8 @@ PHASE GATE (rule 5) -> go to §8/§9/§10 (see GATE below).
 Dispatch `implementer` (legacy mode) with phase spec + research summary.
 Returns STUCK -> go to ESCALATE.
 If IS_FINAL_PHASE: phase spec includes the deploy task; confirm the return
-includes "deployed URL" before proceeding.
+realizes `deploy_kind` (deployed URL / published version / verified install-run)
+before proceeding.
 
 ## 3N. TEST (blind)
 
@@ -237,8 +254,11 @@ REGRESSION + COVERAGE GATES (before closing — all FAIL HARD, do not close):
   IS_FINAL_PHASE: any transition still PENDING -> FAIL HARD. (The case→test half is
   already enforced by `spec-conformance.sh` at §6 — every case-id is cited by a
   boundary test, which by placement lands in tests/regression/.)
-- EVIDENCE (FRONTEND_PHASE only, hard rule 13): docs/evidence/e2e-phase-<n>/ must
-  contain at least the per-UI-existence-assertion screenshots. Empty -> FAIL HARD.
+- EVIDENCE (hard rule 13): docs/evidence/e2e-phase-<n>/ must contain the boundary
+  run's evidence — per-UI-existence-assertion screenshots for `browser`, or the
+  captured boundary-run transcript for `cli`/`http`/`library-api`. Required whenever
+  this phase closes an E2E_KIND boundary (browser: FRONTEND_PHASE; others: the phase
+  ships/changes the outer surface). Empty when required -> FAIL HARD.
 - IF IS_FINAL_PHASE: additionally run `bash scripts/regression.sh --real` (full real
   corpus). A failure blocks close.
 
@@ -256,24 +276,28 @@ IF IS_FINAL_PHASE — FINAL CLOSE sequence:
   a. Run `/synthesize` — pass the signal that this is the final phase so the
      synthesizer runs the extended pass (OVERVIEW.md + README.md update).
 
-  b. Read docs/ENDPOINTS.md. Surface a "READY TO USE" summary to me:
+  b. Surface a "READY TO USE" summary to me, shaped by `deploy_kind`:
      ```
      ✅ PROJECT COMPLETE
 
-     Deployed at: <base URL from docs/INFRA.md "Deployed base URL">
+     <deploy_kind line:
+       cloud-deploy         -> Deployed at: <base URL from docs/INFRA.md "Deployed base URL">
+       package-publish       -> Published: <package name> @ <version> to <registry>
+       install-run-verified  -> Verified install/run: <the exact commands, confirmed working>
+       none(<reason>)        -> Not shipped: <reason>>
 
-     ## Endpoints
-     <paste the full docs/ENDPOINTS.md table>
+     ## Interface
+     <web/http: paste the full docs/ENDPOINTS.md table; cli: the command surface;
+      library: the public API surface>
 
      ## Quick start
-     - Base URL: <URL>
-     - Auth: <Bearer token / API key / none — from ENDPOINTS.md>
-     - Health check: GET <base URL>/health
+     <how to use it, per deploy_kind — base URL + auth + health check for a service;
+      install + invoke for a CLI; import + call for a library>
 
      ## Docs
-     - Full endpoint catalogue: docs/ENDPOINTS.md
+     - Full interface catalogue: docs/ENDPOINTS.md
      - Object/state flow: docs/DATAFLOW.md
-     - Infrastructure: docs/INFRA.md
+     - Infrastructure: docs/INFRA.md (if infra_needed)
      - Project history: docs/HISTORY.md
      ```
   Tell me the project is complete and ready to use.
@@ -293,6 +317,7 @@ After each step, update docs/STATE.md:
 phase: <n> (in progress)
 tdd: <true|false>
 frontend_phase: <true|false>
+e2e_kind: <browser|cli|http|library-api — the bound value>
 completed: <steps done so far>
 next: <exact next step>
 blocker: <none or open issue>

@@ -2,7 +2,7 @@
 description: Compress handoff docs, dedup the issue log, prune snapshots. Run before /clear.
 ---
 
-Caveman ULTRA mode.
+compression: user (.claude/ref/compression.md).
 
 Trigger: end of a phase, or any time STATE.md / ISSUES.md feel bloated.
 

@@ -17,6 +17,28 @@
 
 Newest first. One entry per architectural change. Appended by `/log-decision`.
 
+- **(v2.3)** — **Compression internalized + core/use-case separation + Cursor drop.**
+  Two streams. **Stream A:** the external `caveman` skill (vendored fallback +
+  "global-authoritative if installed" resolution + model-invoked triggers) becomes a
+  kit-native, single-source, always-on reference (`.claude/ref/compression.md`) with
+  two named profiles — `user` (human-facing, keeps the Auto-Clarity exception) and
+  `internal` (agent↔agent, harder). ~40 scattered "Caveman ULTRA mode" phrases
+  collapse to one-line profile pointers; exact-output artifacts are exempted by
+  structural gates in the `spec-author` / `test-author` / `e2e-runner` prompts.
+  **Stream B:** the invariant core (loop, gates, doc system, commands) is separated
+  from web/Azure practice, which becomes preinstalled knowledge docs
+  (`knowledge/webapp.md`, `knowledge/azure.md`) consulted deterministically by
+  `researcher` at RESEARCH. New OVERVIEW flags — `project_type`, `infra_needed`,
+  `e2e_kind`, `deploy_kind`, `knowledge_docs` — declared at `/overview`, bound
+  per-phase at RESEARCH: Phase 0 exists iff `infra_needed`; the boundary run is
+  selected by `e2e_kind`; the final phase completes `deploy_kind`. Cursor support is
+  hard-dropped (Claude Code only). New decision entries §5.57–§5.71. NEW files:
+  `.claude/ref/compression.md`, `knowledge/webapp.md`, `knowledge/azure.md`. REMOVED:
+  `.claude/skills/caveman/`, `.cursor/**`, `.claude/hooks/cursor-session-start.sh`,
+  and the installer tool-selection machinery. CUT from default install (embedded as
+  templates in the knowledge docs): `playwright.config.ts`, `e2e/`,
+  `docker-compose.test.yml`, `scripts/e2e-stack.sh`, `scripts/auth-setup.sh`.
+
 - **(v2.2)** — **Spec-driven behavioral contract.** Closes the v2.1 residual:
   fabrication under a thin acceptance surface. In v2.1 a phase's whole contract was
   a single `acceptance:` line; `implementer` and `test-author` each independently
@@ -203,11 +225,14 @@ Hard-stop at 3 forces either /unstuck (re-research) or human intervention.
 Subagent → orchestrator → user. A subagent that directly asks the user would
 fragment the conversation and make the orchestrator's state inconsistent.
 
-### 5.8 Skill vendoring is fallback-only
+### 5.8 Skill vendoring is fallback-only  *(superseded by §5.62, v2.3)*
 caveman and grill-me are vendored in `.claude/skills/` as fallback copies only.
 The global `~/.claude/skills/` copy is authoritative. The vendored copy is used
 only if the global is missing. This prevents the project copy from diverging
 from the user's customized global version.
+> **Superseded (v2.3, §5.62):** caveman is internalized to `.claude/ref/
+> compression.md`; grill-me becomes the sole authoritative source. The
+> "global-authoritative if installed" resolution rule is dropped entirely.
 
 ### 5.9 DESIGN_LOG.md is append-only
 History is never rewritten. Decisions that turn out to be wrong get a new entry
@@ -439,7 +464,11 @@ logic; called out for the upgrade smoke test).
 **Rejected:** clobbering reinstall; reimplementing setup.sh logic in Node (drift);
 imperative per-version migrations as the default.
 
-### 5.32 Multi-tool adapters — Claude Code + Cursor (v2.0)
+### 5.32 Multi-tool adapters — Claude Code + Cursor (v2.0)  *(reversed by §5.69, v2.3)*
+> **Reversed (v2.3, §5.69):** Cursor support is hard-dropped. The `.cursor/**`
+> tree, `cursor-session-start.sh`, and the installer tool-selection machinery are
+> removed; `commands.src/` now generates only `.claude/commands/`. Claude Code only.
+
 **Problem:** the kit was Claude-only; maintaining parallel per-tool command copies
 by hand would drift.
 
@@ -619,6 +648,160 @@ the removed TEST REVIEW); rule **14** = re-seamed DATAFLOW (kept in place); rule
 new rules append as **17** (spec staleness), **18** (spec conformance), **19** (author ≠
 implementer). This preserves every existing `hard rule N` cross-reference except 12.
 
+### 5.57 Compression rules: standalone kit-native reference file (v2.3)
+**Decision:** compression rules live in exactly one kit-native reference file,
+`.claude/ref/compression.md` (replaces the vendored `caveman` skill). AGENTS.md and
+every crafted subagent prompt POINT to it; none restate the rules. Not placed under
+`.claude/skills/` — no description/trigger surface, so §5.61 is satisfied
+structurally, not by discipline.
+**Rejected:** rules inside AGENTS.md (subagents don't inherit it — they run their own
+crafted prompts by design); rules duplicated per prompt (drift).
+
+### 5.58 Two named compression profiles (v2.3)
+**Decision:** `user` (human-facing; keeps the Auto-Clarity exception — security
+warnings, irreversible-action confirmations, multi-step sequences, clarification
+requests) and `internal` (agent→agent; harder compression, no clarity exception).
+**Rejected:** one rule set with a conditional exception (implicit, weaker than a named
+structural declaration).
+
+### 5.59 Invocation sites collapse to profile pointers (v2.3)
+**Decision:** ~40 "Caveman ULTRA mode" phrases rewrite to a one-line profile pointer
+per prompt — subagents `compression: internal (.claude/ref/compression.md).`, commands
+`compression: user (…)`; AGENTS.md declares the `user` directive; the SessionStart hook
+reminder references the profile system.
+**Rejected:** outright deletion (breaks coverage — no inheritance); keeping full phrases
+(redundant, drift-prone).
+
+### 5.60 Positive artifact exemption as structural gate (v2.3)
+**Decision:** exact-output artifacts (RED harness assertions, spec-author contract
+output, fixtures, emitted Playwright, `# spec:`/`// spec:` citations, quoted errors)
+are exempted from compression via a positive structural gate declared in the
+`spec-author`, `test-author`, and `e2e-runner` prompts — not a rule inside the
+reference file. Compression is always-on, so exemption must be explicit at the artifact
+boundary.
+**Rejected:** exemption as a rule in the reference file (mixes concerns); inline prose
+per agent (non-structural, unverifiable).
+
+### 5.61 Model-invoked compression triggers killed (v2.3)
+**Decision:** the skill description triggers ("caveman mode", "be brief", `/caveman`)
+are deleted. Compression exists only as an always-on directive + profile pointers.
+Mandatory behavior is never model-invoked.
+
+### 5.62 grill-me vendored as sole source (v2.3)
+**Decision:** the vendored `grill-me` copy is authoritative; the "global-authoritative
+if installed" resolution rule is dropped entirely (it existed to serve two external
+skills; caveman's internalization leaves one consumer, which does not justify a
+resolution mechanism). §5.8 is superseded by this.
+**Rejected:** keeping the resolution rule for one consumer (dead mechanism).
+
+### 5.63 User freedom = composition, not enforcement (v2.3)
+**Decision:** users choose use case and modules; every installed gate stays HARD. No
+config to soften gates to warnings. Non-agent-behavior files (templates, scaffold,
+infra scripts) must be use-case-agnostic.
+**Rejected:** gate-softening config (a soft gate is a discipline rule; discipline rules
+are ruled out — "worry-free or fail hard").
+
+### 5.64 LCD core + matured practice as preinstalled knowledge docs (v2.3)
+**Decision:** the core ships nothing use-case-specific. Matured practices become
+preinstalled knowledge docs — `knowledge/webapp.md`, `knowledge/azure.md` — consulted
+by `researcher` (new STEP 0.5) at RESEARCH when the declared use case matches. Branch-
+only reference via pointer, loaded only when the branch triggers; reuses existing
+machinery (researcher already consults `research/INDEX.md` + KB snapshot). Selection is
+a deterministic table in `commands.src/overview.md`, recorded as OVERVIEW
+`knowledge_docs:` — never researcher-inferred (§5.66).
+**Rejected:** project-type scaffolds at install (designs N scaffolds upfront, guesses at
+demand); pure LCD without knowledge docs (guts the "ready-made" value users praised).
+
+### 5.65 Adaptive loop: RESEARCH binds E2E_KIND / DEPLOY_KIND (v2.3)
+**Decision:** the TDD APPLICABILITY check at RESEARCH is extended to bind two further
+per-phase values, same idiom as `TDD_PHASE`: `E2E_KIND` (browser via Playwright, CLI
+invocation, HTTP, library public API — generalizes v2.2's browser-specific boundary
+concept to outer-boundary) and, on the final phase, `DEPLOY_KIND` confirmation. "Last
+phase always includes deployment" is re-worded to "last phase always completes
+DEPLOY_KIND."
+**Realization (ordering split):** §5.65's literal "RESEARCH sets the flags" cannot hold
+for `INFRA_NEEDED` because `/phase` PRE-FLIGHT (which blocks on Phase 0) runs BEFORE
+RESEARCH. Resolved by splitting DECLARATION from BINDING: the project-level facts
+(`project_type`, `infra_needed`, `e2e_kind` baseline, `deploy_kind`, `knowledge_docs`)
+are declared at `/overview` and recorded in OVERVIEW.md (same idiom as `has_frontend`),
+where PRE-FLIGHT can read them; RESEARCH does the per-phase binding (effective
+`E2E_KIND` = browser iff frontend phase else baseline; `DEPLOY_KIND` re-confirm on final
+phase).
+**Realization (browser-only dispatch):** `e2e-runner` stays a Playwright emitter,
+dispatched only when the bound `E2E_KIND` is `browser`; for cli/http/library-api the
+generalized rule 13 is satisfied by `test-author`'s real-mode boundary suite against the
+outer surface, with its transcript captured as evidence — no separate shipped-artifact
+runner.
+**Rejected:** dropping deploy/E2E from the core loop (weakens the completeness
+guarantee); a universal outer-boundary emitter for all kinds (more prompt surface than
+the real-mode suite already provides).
+
+### 5.66 Project type declared at /overview (v2.3)
+**Decision:** the `/overview` grill asks `project_type` (web app / desktop app / script
+/ library / other). The answer is recorded in `docs/OVERVIEW.md` (alongside
+`has_frontend` + frontend root). `researcher` reads it to select knowledge docs;
+RESEARCH uses it (via the derived flags) to shape the loop.
+**Rejected:** researcher infers type from description (a model-invoked trigger for
+mandatory behavior — the pattern §5.61 kills).
+
+### 5.67 Minimal core cut line (v2.3)
+**Decision:** default install ships `AGENTS.md`, hooks, slash commands, agent prompts,
+the doc system (STATE/ISSUES/synthesizer/snapshots), knowledge docs, gate scripts. Cut
+from default install: `playwright.config.ts`, `e2e/`, `docker-compose.test.yml`,
+`scripts/e2e-stack.sh`, `scripts/auth-setup.sh`. Cut items are NOT deleted from the kit
+— they are embedded as fenced templates in `knowledge/webapp.md` / `knowledge/azure.md`
+and materialized per-project on demand (then user-owned, like `fixtures/`). Chosen over
+a non-installed templates dir, which would need new manifest/setup.sh gating machinery
+right after the Cursor gating was removed.
+**Retention constraint (user feedback #4):** doc auto-update + slash commands survive
+untouched in the minimal core.
+**Rejected:** interactive module picker at install (defer until real packs exist).
+
+### 5.68 Infra-provisioner conditional; Azure → knowledge doc (v2.3)
+**Decision:** `infra-provisioner` stays in the kit, prompt generalized (Azure specifics
+— Bicep, `az`, Entra/MSAL, THB costs, Key Vault — move to `knowledge/azure.md`). The
+`infra_needed` flag (declared at `/overview`: application types → true; script/library →
+false) gates Phase 0 dispatch. The SessionStart Azure reminder line and `auth-setup.sh`
+leave core; the Azure knowledge doc reintroduces the auth ritual (materializable
+`scripts/auth-setup.sh` template) when Azure is in play, and the project's liveness
+command is recorded in `docs/INFRA.md ## AUTH` so `/phase` PRE-FLIGHT stays generic.
+Old hard rule 10 (Azure auth once-per-session) moves to `knowledge/azure.md`; its slot
+is repurposed for the new deterministic-flags rule (zero renumbering — all `hard rule N`
+cross-references keep their numbers).
+**Rejected:** dropping infra-provisioner from core (loses mandatory coverage for
+application use cases); keeping the Azure-fitted prompt (violates §5.63); renumbering the
+hard rules (needless churn — rules 1–19 are contiguous, the slot repurposes cleanly).
+
+### 5.69 Cursor hard drop (v2.3)
+**Decision:** delete `.cursor/hooks.json`, `.cursor/commands/` generation, `.cursor/
+rules/` pointer, Cursor sections in README/docs, `cursor-session-start.sh`, and the
+dual-tool wiring in `setup.sh` + `create-anpunkit` (the whole `--tools`/`--add-tool`/
+`anpunkit-tools.json` tool-selection machinery, dead once one tool remains). README
+states "Claude Code only." A deliberate reversal of the v2.x Cursor-parity investment
+(v2.2 explicitly maintained parity): maintenance cost exceeds demand per user feedback.
+§5.32 (installer tool selection) is reversed by this.
+**Rejected:** soft drop with a "portable if you re-wire" note (half-promise, support
+burden).
+
+### 5.70 spec-author / test-author tool grants settled (v2.3, v2.2 carry-over)
+**Decision:** `spec-author` and `test-author` are granted `Read, Grep, Glob, Write,
+Bash` — deliberately NO `Edit`. `spec-author` authors fresh spec rows and fixtures
+(Write), never patches source; at SPEC REVIEW a "wrong expected" correction is applied
+by the ORCHESTRATOR patching the fixture directly (`phase.md §3`), not by re-granting
+`spec-author` edit rights. Recorded here to close the v2.2 carry-over.
+**Rejected:** granting `Edit` for in-place fixture patches (blurs author ≠ implementer,
+§5.53; the orchestrator-patch path already covers it).
+
+### 5.71 fixtures/ committed, never gitignored (v2.3, v2.2 carry-over)
+**Decision:** `fixtures/<case-id>-{input,expected,ui}.json` are COMMITTED — they are the
+behavioral contract that both the spec row and the generated test harness load
+(transcription is structural, not honor-system). Deliberate contrast with
+`docs/evidence/`, `docs/research/*.md`, `.env.test`, `docs/.snapshots/`, and
+`docs/.kb-snapshot.md`, which ARE gitignored. `.gitignore` therefore must NOT list
+`fixtures/`. Recorded here to close the v2.2 carry-over.
+**Rejected:** gitignoring fixtures (would break the contract-load guarantee — the test
+would have no expected values to assert against on a fresh checkout).
+
 ---
 
 ## 6. Current file inventory
@@ -729,6 +912,31 @@ become harness EMITTERS (generate from spec rows, author no assertions);
 `*.py text eol=lf` (the kit now ships a Python comparator). REMOVED: the v2.1 human
 TEST REVIEW gate + the `docs/test-plan-phase-<n>.md` artifact.
 
+### v2.3 changes to the inventory
+
+```
+.claude/ref/compression.md         NEW — kit-native compression profiles (user, internal); single source
+knowledge/webapp.md                NEW — matured web-app practice + browser-E2E stack templates
+knowledge/azure.md                 NEW — matured Azure practice + auth-ritual/provisioning templates
+.claude/skills/caveman/            REMOVED — internalized to .claude/ref/compression.md
+.cursor/                           REMOVED — hooks.json, rules/anpunkit.md, commands/ (Cursor dropped, §5.69)
+.claude/hooks/cursor-session-start.sh  REMOVED — Cursor JSON-envelope wrapper
+.claude/anpunkit-tools.json        REMOVED (per-project) — installer tool-selection machinery gone
+playwright.config.ts               CUT from default install — now a template in knowledge/webapp.md
+e2e/global-setup.ts                CUT — template in knowledge/webapp.md
+docker-compose.test.yml            CUT — template in knowledge/webapp.md
+scripts/e2e-stack.sh               CUT — template in knowledge/webapp.md
+scripts/auth-setup.sh              CUT — template in knowledge/azure.md
+```
+
+Role deltas (v2.3): `researcher` gains STEP 0.5 (consult OVERVIEW `knowledge_docs`
+before web search); `infra-provisioner` generalized (cloud specifics → knowledge/
+azure.md, dispatched only when `infra_needed`); `planner` Phase-0-conditional +
+`deploy_kind` completion; `e2e-runner` = browser E2E_KIND emitter. `commands.src/`
+now generates only `.claude/commands/`. Hard rule 10 repurposed (Azure auth →
+knowledge/azure.md; new slot = deterministic flags); rules 8/13/16 generalized in
+place; rules stay 1–19 contiguous.
+
 ## 7. How each original problem maps to its fix
 
 | Problem | Fix |
@@ -739,7 +947,7 @@ TEST REVIEW gate + the `docs/test-plan-phase-<n>.md` artifact.
 | 4 context rot in debug | `debugger` isolated context + writes noise to file |
 | 5 want orchestration | 8 scoped subagents; `/phase` orchestrates them |
 | 6 handoff bloat | `synthesizer` + PreCompact hook; HISTORY.md for long log |
-| 7 Azure auth friction + infra ad-hoc | `auth-setup.sh` + `infra-provisioner` Phase 0 |
+| 7 cloud auth friction + infra ad-hoc | INFRA.md `## AUTH` liveness ritual (Azure: `knowledge/azure.md`) + `infra-provisioner` Phase 0 when `infra_needed` |
 | 8 re-discovering same gotchas across projects | KB snapshot at session start; researcher checks before web; `/store-wisdom` promotes findings |
 
 ---
@@ -747,9 +955,11 @@ TEST REVIEW gate + the `docs/test-plan-phase-<n>.md` artifact.
 ## 8. Known gaps & template placeholders
 
 1. `docker-compose.test.yml` — build contexts and ports are TEMPLATE values.
+   (v2.3: now a fenced template in `knowledge/webapp.md`, materialized per project.)
 2. `e2e/global-setup.ts` — MSAL cache-key shape is a stub; adjust for app's
-   `@azure/msal-browser` version/config.
-3. caveman vendored copy is the base version, not the user's ULTRA variant.
+   `@azure/msal-browser` version/config. (v2.3: template in `knowledge/webapp.md`.)
+3. *(resolved v2.3, §5.57)* caveman is now kit-native and single-source
+   (`.claude/ref/compression.md`) — there is no vendored-vs-user-variant divergence.
 4. Visual-regression testing — explicit non-goal.
 5. Agent Teams / cross-session parallelism — deferred.
 6. SessionEnd guard hook — discussed, not built.
@@ -779,12 +989,16 @@ TEST REVIEW gate + the `docs/test-plan-phase-<n>.md` artifact.
    unbiased-test guarantee — it replaces v2.1's "tests written blind" (the spec
    fixtures are authored before code, so the contract can't be shaped to an impl).
    (Non-TDD phases keep blind-from-acceptance tests — no spec to drive them.)
-7. Never script the Microsoft login UI.
+7. Boundary auth uses a dedicated headless test credential; never script an
+   interactive login UI (Microsoft/Entra specifics: `knowledge/azure.md`). (v2.3)
 8. Fail loud, never silent — especially hook wiring.
 9. Honest failure classification — environment issues never burn the debug budget.
-10. Azure infra is Phase 0: provisioned once, reviewed before apply, recorded in INFRA.md.
+10. Infra is Phase 0 when `INFRA_NEEDED`: provisioned once, reviewed before apply,
+    recorded in INFRA.md. (v2.3: conditional on the declared use case.)
 11. Plan before code: design-research + double grill before OVERVIEW.md is written.
     The planner must never design phases against unverified assumptions.
-12. Deployment is always in the last phase — never omitted, never a separate phase.
+12. The last phase always completes `DEPLOY_KIND` — cloud deploy, package publish, or
+    verified install/run — never omitted (only `none` with a recorded reason), never a
+    separate phase. (v2.3: generalized from "deployment".)
 13. The shared KB is human-gated at both ends: you approve before push (/store-wisdom),
     and findings are static within a session (KB snapshot). The KB never writes itself.

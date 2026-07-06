@@ -3,7 +3,7 @@ description: Make a small, obvious change directly — no agent chain, no phase 
 argument-hint: [what to change]
 ---
 
-Caveman ULTRA mode. Apply `karpathy-guidelines` skill.
+compression: user (.claude/ref/compression.md). Apply `karpathy-guidelines` skill.
 
 Purpose: skip the orchestration tax for a 5-line fix.
 

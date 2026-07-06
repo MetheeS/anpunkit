@@ -2,7 +2,7 @@
 description: Forced re-research after a circuit breaker. Stops flailing, re-routes to deep research with full memory of dead ends.
 ---
 
-Caveman ULTRA mode.
+compression: user (.claude/ref/compression.md).
 
 Trigger: I chose "re-research" at a circuit breaker (see /phase step 5).
 

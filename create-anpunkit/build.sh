@@ -14,6 +14,8 @@ tar -C "$ROOT" \
   --exclude='./.anpunkit-backup-*' \
   --exclude='*.anpunkit-new' \
   --exclude='./node_modules' \
+  --exclude='./index.html' \
+  --exclude='./anpunkit.png' \
   -cf - . | tar -C "$TPL" -xf -
 echo "built template/ from $ROOT"
 

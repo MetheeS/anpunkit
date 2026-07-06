@@ -1,65 +1,73 @@
 {
-  "version": "2.2.0",
+  "version": "2.3.0",
   "files": [
     {
       "path": "AGENTS.md",
-      "sha256": "0e4bdc92e8e33355fdfca8d7c3f644bd5f6b91d8b11b1837c65241c25a8dd695"
+      "sha256": "eb9e76938dd765cdc761cb53d9030f03d67edf04f1228bdb8fed4332273a29ee"
     },
     {
       "path": "CLAUDE.md",
-      "sha256": "132e64b4a9a5a178deb4db810324f79338c2af65d598fd5e26f183225c2a4d98"
+      "sha256": "2dbf55cd7a8ad2279eab8ac2e3637855f25e5c96b77fe48bd4d5cfe3e36508ca"
     },
     {
       "path": "README.md",
-      "sha256": "ca353eea88978b65dab78355ec304de0b8fb5d8ecb54d4316ee493de4459f002"
+      "sha256": "b0ac71a37d69f8c2a77db182e4930bfa7984e8d0f5685b18820d06eed83c9cb5"
     },
     {
       "path": ".gitattributes",
-      "sha256": "5362db7bc5f0639f80bb191f5d6436a2c54b1ca8a398362fba14136eca4014bf"
+      "sha256": "f34441c7cdb173b9a17313d369e6e278c70e019e162532b96b7f1ad461312d16"
     },
     {
       "path": "setup.sh",
-      "sha256": "77e994cbd6db69dde57fbdd8ce1460bc61cd24ad338e816303f7243165001e32"
+      "sha256": "d19382499232221b2b180b684f1935f0fe7eda3d2078dd37ffe65c8aaeedaed1"
+    },
+    {
+      "path": ".claude/ref/compression.md",
+      "sha256": "baa49f9d97af1a168a5f74317732d13a9ce5085cebbbbf3c824f19886de483dd"
+    },
+    {
+      "path": "knowledge/webapp.md",
+      "sha256": "21898ae582abac519f9af0f054fa14c03d6648ff2c877609523f6a590eca6259"
+    },
+    {
+      "path": "knowledge/azure.md",
+      "sha256": "f94e06ed2c6879014868550810c73b5b9520db7e8c8727744714d9e12539c056"
     },
     {
       "path": ".claude/agents/debugger.md",
-      "sha256": "4ddc97252275db82356489061b87b71ac39bd9e4cc7a47d0501132c7c7024a52"
+      "sha256": "843b6a96921d3e0957f507cba77e0b25125b946bfe2b3d20439e9627b49f3e6b"
     },
     {
       "path": ".claude/agents/e2e-runner.md",
-      "sha256": "c454ad3217d6adc21e0e6cda5746e3094ea299cd7e71f761e1f417a7d6a2391e"
+      "sha256": "b5712614f0f8e09bd1884250258231bd69f019ed15018566fe06b67d092e7d18"
     },
     {
       "path": ".claude/agents/implementer.md",
-      "sha256": "e6598fdb77657616f821695323653cfdded44db85a428597d1c8074a56bbf816"
+      "sha256": "1a1d7cff9f64d519742932e36a0b89ee951d07a493493c37f27d1df00cd9e41f"
     },
     {
       "path": ".claude/agents/infra-provisioner.md",
-      "sha256": "52a54a2aaaf7e53d28e261f5e01f2693fd0a4883fd93f844a112a742a91f9149"
+      "sha256": "6f7cba54296c2f46bc382a59007cfe7943fd2f0a713b4af541316247ad00099d"
     },
     {
       "path": ".claude/agents/spec-author.md",
-      "sha256": "3e352514bfd5eb32f966cfa12014d706d17b3a12ad2155e2f826243c03fb7d0c"
+      "sha256": "d2f795b1555bf740af058282705079725ea68eb4293da25b964e11e65343e5d7"
     },
     {
       "path": ".claude/agents/planner.md",
-      "sha256": "a1a2b86aa5a88d8b9fee9af3a8d10c7f1f09e5a2fb32f831dce38b010c507771"
+      "sha256": "7c497def29d093de877747cba350981bc804f477e4e3d48c2173e58a5366b1b4"
     },
     {
       "path": ".claude/agents/researcher.md",
-      "sha256": "aa54503f8c9998d3aa97aa322c0ba47d23cae8aea6236530ddc2dfc44e7c4658"
+      "sha256": "e21a126a37f1054640f4ccd16d8f7719178570a4fa4c29a9e5a472b879589352"
     },
     {
       "path": ".claude/agents/synthesizer.md",
-      "sha256": "d17de592a3c83f2439ff9be68337d04c9d4933aa2193c68372005a85a2fdec95"
+      "sha256": "3d61df0c762eaf6e0d46722bfaab8a67666d06e05d8cc0f1afed03139071ad13"
     },
     {
       "path": ".claude/agents/test-author.md",
-      "sha256": "adc53adb326424dcb215a5f074c7df3dfcb6644f2c63ce1e9ed68d2810dc8398"
-    },
-    {
-      "path": ".claude/hooks/cursor-session-start.sh",
-      "sha256": "e08bcd14fbcfe1831b64e7d8f181b57b02c561cd8d0de6eb16fe06db259be6af"
+      "sha256": "2cd74c971a9f04656535e44ab6d981911f447457a19d9a6e5c23b9146478071d"
     },
     {
       "path": ".claude/hooks/pre-compact.sh",
@@ -67,15 +75,11 @@
     },
     {
       "path": ".claude/hooks/session-start.sh",
-      "sha256": "9cfce17a40cebf3bc518f37b33b4fad2c47f43b5913fec03b98e96e1d232bc94"
+      "sha256": "a47fc68a4f4a92cd093de2d49301e16fc499e358cbdc2c4cc364aed5f012cb97"
     },
     {
       "path": ".claude/hooks/subagent-stop.sh",
       "sha256": "fd4b48484db0511e6b78ff659213ebb826e3082e37c98d67dbcb09f159c3e318"
-    },
-    {
-      "path": ".claude/skills/caveman/SKILL.md",
-      "sha256": "62c1522b986679f75e574d7f04c939405df6fc200723d67a255b36d960d9880c"
     },
     {
       "path": ".claude/skills/grill-me/SKILL.md",
@@ -83,151 +87,87 @@
     },
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
-      "sha256": "5423139b03a976713348ed4badd5de65e64fbf04d997e7b692917b1d0baddc3b"
+      "sha256": "bb48ebcc401b9893dc7fad38b1a98960f5fdd0673456328bb11a1968e246f6dd"
     },
     {
       "path": "commands.src/infra.md",
-      "sha256": "fe0e6ba6cf0c2fc3826ab67cd882752e9450677b1ffef440388349f0ba3c4fb6"
+      "sha256": "06cd17689be763718ad2ebeded8a86c4d784c4e4ccf959828853f35b7c480d15"
     },
     {
       "path": "commands.src/log-decision.md",
-      "sha256": "90c1bd5d6e625730e0b735eefc521239a8e1f547e8f1a0e8d2b8d96ca95612ed"
+      "sha256": "b8964c64ed6d576573f34e8a2f050d880c4d60ccc7f63f0bf8b29e31be418063"
     },
     {
       "path": "commands.src/log-issue.md",
-      "sha256": "359967180b5dde14f36cfabda0b0a2bc8bbb17580da557805879ab4e50eabeca"
+      "sha256": "ba448c1b93b496e60ac59e14c126c014daf53e02ed60556d4e9eff2e0700d382"
     },
     {
       "path": "commands.src/overview.md",
-      "sha256": "85a300dcdd94d95c87c25c84d06619a38b5b3679631f68b511da11d7010e5cb8"
+      "sha256": "3c36baa2711d6a1c8fe181f5081f9e04b1eaa974006f16f71a3901edbcddfca3"
     },
     {
       "path": "commands.src/phase.md",
-      "sha256": "60a0e6442c2a3945afc4aec991cd44d48705eb8c142f3c2284db7095bb5441d9"
+      "sha256": "21b417f32008e76fd9d3039bd71e6eb2556f5e4a5e214b05a1cded57a14193e1"
     },
     {
       "path": "commands.src/quick.md",
-      "sha256": "6517eefcc1c6458d441ebea1db736d7070abf6531a7e96c55ae00b90a0763313"
+      "sha256": "7d7ae50905dac714dfaf491b038c97c809e38fda49a783f0745aaa4c15cc485b"
     },
     {
       "path": "commands.src/replan.md",
-      "sha256": "57597623a2118e5867963aa61a04cff7808eb5ce8e2aed5bebb5247cff6be8ad"
+      "sha256": "e27e6057039138cb81d0a3041d652580f2eba99ace8b17f68ccbe89abcef303a"
     },
     {
       "path": "commands.src/store-wisdom.md",
-      "sha256": "960bf4e281d30a451298b5a34c4052cc65be5bc0e9f4a7a91140c7915a2dd362"
+      "sha256": "f6427b6ad2ea671d7d6ab1c24cea4e6495e0fa14d4266d2f1c4863ed92b03e58"
     },
     {
       "path": "commands.src/synthesize.md",
-      "sha256": "db4a19ff627eb22fbc1f78d1e8e2c98d73ab05fdd780afe0ca62b7ce9885c21c"
+      "sha256": "41218772abe8c2d756b0851cdb14efaa59208dd5905119da374a436a608b4e8a"
     },
     {
       "path": "commands.src/unstuck.md",
-      "sha256": "a675a648af299074240d3b7b4aa7ca39d41fdfc44520352c67f0895d5c5c1102"
+      "sha256": "72f093e0578b19745940741fc7062845196fe70110b6987af66fa44cfae5b154"
     },
     {
       "path": ".claude/commands/infra.md",
-      "sha256": "fe0e6ba6cf0c2fc3826ab67cd882752e9450677b1ffef440388349f0ba3c4fb6"
+      "sha256": "06cd17689be763718ad2ebeded8a86c4d784c4e4ccf959828853f35b7c480d15"
     },
     {
       "path": ".claude/commands/log-decision.md",
-      "sha256": "90c1bd5d6e625730e0b735eefc521239a8e1f547e8f1a0e8d2b8d96ca95612ed"
+      "sha256": "b8964c64ed6d576573f34e8a2f050d880c4d60ccc7f63f0bf8b29e31be418063"
     },
     {
       "path": ".claude/commands/log-issue.md",
-      "sha256": "359967180b5dde14f36cfabda0b0a2bc8bbb17580da557805879ab4e50eabeca"
+      "sha256": "ba448c1b93b496e60ac59e14c126c014daf53e02ed60556d4e9eff2e0700d382"
     },
     {
       "path": ".claude/commands/overview.md",
-      "sha256": "85a300dcdd94d95c87c25c84d06619a38b5b3679631f68b511da11d7010e5cb8"
+      "sha256": "3c36baa2711d6a1c8fe181f5081f9e04b1eaa974006f16f71a3901edbcddfca3"
     },
     {
       "path": ".claude/commands/phase.md",
-      "sha256": "60a0e6442c2a3945afc4aec991cd44d48705eb8c142f3c2284db7095bb5441d9"
+      "sha256": "21b417f32008e76fd9d3039bd71e6eb2556f5e4a5e214b05a1cded57a14193e1"
     },
     {
       "path": ".claude/commands/quick.md",
-      "sha256": "6517eefcc1c6458d441ebea1db736d7070abf6531a7e96c55ae00b90a0763313"
+      "sha256": "7d7ae50905dac714dfaf491b038c97c809e38fda49a783f0745aaa4c15cc485b"
     },
     {
       "path": ".claude/commands/replan.md",
-      "sha256": "57597623a2118e5867963aa61a04cff7808eb5ce8e2aed5bebb5247cff6be8ad"
+      "sha256": "e27e6057039138cb81d0a3041d652580f2eba99ace8b17f68ccbe89abcef303a"
     },
     {
       "path": ".claude/commands/store-wisdom.md",
-      "sha256": "960bf4e281d30a451298b5a34c4052cc65be5bc0e9f4a7a91140c7915a2dd362"
+      "sha256": "f6427b6ad2ea671d7d6ab1c24cea4e6495e0fa14d4266d2f1c4863ed92b03e58"
     },
     {
       "path": ".claude/commands/synthesize.md",
-      "sha256": "db4a19ff627eb22fbc1f78d1e8e2c98d73ab05fdd780afe0ca62b7ce9885c21c"
+      "sha256": "41218772abe8c2d756b0851cdb14efaa59208dd5905119da374a436a608b4e8a"
     },
     {
       "path": ".claude/commands/unstuck.md",
-      "sha256": "a675a648af299074240d3b7b4aa7ca39d41fdfc44520352c67f0895d5c5c1102"
-    },
-    {
-      "path": ".cursor/commands/infra.md",
-      "sha256": "d6f7a7ee93f76a4d68aeb74c1f43aa76b969043ac59fbc22b02675e05a6dfee5"
-    },
-    {
-      "path": ".cursor/commands/log-decision.md",
-      "sha256": "3a4ea21091306d2cf1d24595318c4a0bb15e9fd4283d5fb96fc26f2749f26f73"
-    },
-    {
-      "path": ".cursor/commands/log-issue.md",
-      "sha256": "abf7199d735f7c994c628711e5aabd661a0656f13ac5723f0a8ffc2f048ad027"
-    },
-    {
-      "path": ".cursor/commands/overview.md",
-      "sha256": "9ee65f44d44362aaa37e5df7ed95eb7d386cec6e2045a2f87a81b80da343ac00"
-    },
-    {
-      "path": ".cursor/commands/phase.md",
-      "sha256": "5a2bac0d8dc36892256e49ddfd6bccac36e1d71dbc4cc0602ac337e398a0733e"
-    },
-    {
-      "path": ".cursor/commands/quick.md",
-      "sha256": "771060033625e721b6a96f774aee4131e65ac2b0c481180004dfa8b8cef5d563"
-    },
-    {
-      "path": ".cursor/commands/replan.md",
-      "sha256": "3ad268b74c0218ae3530e3e7b86b75d9fd26bd98a79a74760efe767a63c251a2"
-    },
-    {
-      "path": ".cursor/commands/store-wisdom.md",
-      "sha256": "95d553ed835888c36b5ff188844e76c3d8c3695654904ab1284766574938c26c"
-    },
-    {
-      "path": ".cursor/commands/synthesize.md",
-      "sha256": "128067091a83934b7cc0c071713c7936cb4905cbcdd57831cecaac5301a20950"
-    },
-    {
-      "path": ".cursor/commands/unstuck.md",
-      "sha256": "d076cc6307af467f79ea41a934c1e14f2a08b01db93e80e912ab77ebd464f7be"
-    },
-    {
-      "path": ".cursor/rules/anpunkit.md",
-      "sha256": "f7ebf7b8a7d8cb6ad7cef55e06f7d36477cf0859b6f974dbb07059e81838a939"
-    },
-    {
-      "path": "playwright.config.ts",
-      "sha256": "32091109fa51b085ddf562d2896de9b25b69fb6302461bb06212078892cb994a"
-    },
-    {
-      "path": "e2e/global-setup.ts",
-      "sha256": "f9fd377d45bad7925e7645b94f5a839ee5a781f51b5ad9f1b3a8011d527f3317"
-    },
-    {
-      "path": "docker-compose.test.yml",
-      "sha256": "03d3d89354769abcfb2abb42540b4fd9d2bfcc382f62815822db9c910c01d9f7"
-    },
-    {
-      "path": "scripts/e2e-stack.sh",
-      "sha256": "98a6ab95e19e3b560887f6c7e935a1947fe59d5cf881f0da8286db66580a7ce4"
-    },
-    {
-      "path": "scripts/auth-setup.sh",
-      "sha256": "bb30646047a83bf857bf0ffc8cef0560f2ddf012d48a19185407f10740d8fa43"
+      "sha256": "72f093e0578b19745940741fc7062845196fe70110b6987af66fa44cfae5b154"
     },
     {
       "path": "scripts/regression.sh",
@@ -251,15 +191,15 @@
     },
     {
       "path": "create-anpunkit/package.json",
-      "sha256": "e283531b788e94cf9ca604a119e9d581e9cede3e1276770087f2c4874927e567"
+      "sha256": "f8b2c8d09f9a32f98bdcac68056adc696a84ab41c2d2497ba5e63f98a1dccb76"
     },
     {
       "path": "create-anpunkit/bin/cli.js",
-      "sha256": "f96460757110e6a0f81cef750c5b39442ea5589f53ae83b69951555632cce7ec"
+      "sha256": "b726046c637e1383bdf5aadf31d027fdab436f8ba7620d8812a25d87a8dc4d92"
     },
     {
       "path": "create-anpunkit/build.sh",
-      "sha256": "3a5062e46ba09ff23736de08545cefd1c0f30b216c3820bd2ada22e3d0db5b79"
+      "sha256": "77f9b11ed5012429fa71fa7a0249e3825d3eb39a426629d3a1e014b8571ab9f9"
     },
     {
       "path": "create-anpunkit/README.md",
@@ -268,9 +208,8 @@
   ],
   "hybrid": [
     ".claude/settings.json",
-    ".cursor/hooks.json",
     ".gitignore",
     "docs/DESIGN_LOG.md"
   ],
-  "generated_from": "commands.src/ -> .claude/commands/ + .cursor/commands/"
+  "generated_from": "commands.src/ -> .claude/commands/"
 }

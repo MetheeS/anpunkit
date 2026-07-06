@@ -3,7 +3,7 @@ description: Log an error to docs/ISSUES.md with root cause + solution, in the c
 argument-hint: [short error description]
 ---
 
-Caveman ULTRA mode.
+compression: user (.claude/ref/compression.md).
 
 Append an entry to docs/ISSUES.md. Error: $ARGUMENTS
 

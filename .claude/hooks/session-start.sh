@@ -44,17 +44,11 @@ if [ -f docs/research/INDEX.md ]; then
   emit ""
 fi
 
-# 3c. infra status + auth nudge
+# 3c. infra status
 if [ -f docs/INFRA.md ]; then
   INFRA_STATUS=$(grep -m1 '^phase 0:' docs/INFRA.md 2>/dev/null || true)
-  PROJECT_HASH=$(echo "$PWD" | md5sum 2>/dev/null | cut -c1-8 || echo "anpunkit")
-  MARKER="/tmp/anpunkit-auth-${USER:-unknown}-${PROJECT_HASH}"
-  if [ ! -f "$MARKER" ]; then
-    emit "## Azure infra present — auth check needed"
-    emit "Run scripts/auth-setup.sh once this session before any Azure work."
-    if echo "$INFRA_STATUS" | grep -qi 'NOT DONE'; then
-      emit "Phase 0 not complete — run /infra to provision before starting phase 1."
-    fi
+  if echo "$INFRA_STATUS" | grep -qi 'NOT DONE'; then
+    emit "## Infra: Phase 0 not complete — run /infra to provision before starting phase 1."
     emit ""
   fi
 fi
@@ -121,12 +115,12 @@ fi
 
 # 4. hard rule reminder
 emit "## RULES (enforced this session)"
-emit "- caveman ULTRA mode is active."
+emit "- compression active: profile user (.claude/ref/compression.md); subagents run profile internal."
 emit "- before debugging ANY error: grep ISSUES.md AND research/INDEX.md first."
 emit "- debug attempts: WARN at 2; first hard-stop at 3 STOPS and asks you."
 emit "- end of every phase: run /synthesize, then /clear."
 emit "- small obvious change? use /quick, not /phase."
-emit "- Azure project? run scripts/auth-setup.sh once per session before Azure work."
+emit "- infra project (infra_needed)? run the INFRA.md AUTH liveness command once per session before real/E2E work."
 if [ -f "$KB_CONFIG" ]; then
   emit "- KB active: researcher checks docs/.kb-snapshot.md before web search."
   emit "- learned something worth keeping? run /store-wisdom."

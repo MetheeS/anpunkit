@@ -3,7 +3,7 @@ description: Record an architectural decision in docs/DESIGN_LOG.md. Use only wh
 argument-hint: [what changed]
 ---
 
-Caveman ULTRA mode.
+compression: user (.claude/ref/compression.md).
 
 Append an architectural decision to docs/DESIGN_LOG.md. Change: $ARGUMENTS
 

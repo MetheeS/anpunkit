@@ -2,7 +2,7 @@
 description: Promote resolved issues and research findings from this project to the shared anpunkit-kb repo. Analyzes, proposes candidates for your review, then pushes approved entries.
 ---
 
-Caveman ULTRA mode. You are the ORCHESTRATOR.
+compression: user (.claude/ref/compression.md). You are the ORCHESTRATOR.
 
 Purpose: share what this project learned with all future projects.
 Only resolved issues and completed research qualify. Open issues do NOT.

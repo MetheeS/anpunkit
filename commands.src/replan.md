@@ -3,7 +3,7 @@ description: Revise docs/PLAN.md when it no longer matches reality — add, cut,
 argument-hint: [what changed about the plan]
 ---
 
-Caveman ULTRA mode.
+compression: user (.claude/ref/compression.md).
 
 Recommended: run from plan mode (Shift+Tab). Optional; the command stops for
 your approval regardless.

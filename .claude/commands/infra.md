@@ -3,16 +3,20 @@ description: Provision or verify Azure infrastructure. Generates Bicep, shows wh
 argument-hint: [provision | verify | update <what changed> | regenerate-env | auth-proof]
 ---
 
-Caveman ULTRA mode. You are the ORCHESTRATOR.
+compression: user (.claude/ref/compression.md). You are the ORCHESTRATOR.
 
 Action: $ARGUMENTS (default: "provision" if INFRA.md missing, "verify" if present)
+
+Only meaningful when docs/OVERVIEW.md has `infra_needed: true`. If
+`infra_needed: false`, tell me this project has no infra phase and STOP.
 
 ---
 
 ## PRE-FLIGHT
 
-1. Check `az account show` — if it fails, STOP.
-   Tell me: "Run `scripts/auth-setup.sh` first."
+1. Confirm cloud CLI auth per the project's knowledge doc (Azure:
+   `knowledge/azure.md` ritual — `bash scripts/auth-setup.sh`; materialize it if
+   absent). If it fails, STOP and tell me the exact command to run.
 
 2. Determine mode from $ARGUMENTS or default logic.
 

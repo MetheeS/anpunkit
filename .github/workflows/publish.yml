@@ -39,7 +39,9 @@ jobs:
           mkdir -p /tmp/smoke && cd /tmp/smoke
           node "$GITHUB_WORKSPACE/create-anpunkit/bin/cli.js" --no-kb
           grep -q 'ANPUNKIT-AGENTS-SENTINEL' AGENTS.md
-          test -f .cursor/hooks.json && test -f .claude/commands/phase.md
+          test -f .claude/commands/phase.md
+          test -f .claude/ref/compression.md && test -f knowledge/webapp.md && test -f knowledge/azure.md
+          test ! -e .cursor && test ! -f scripts/auth-setup.sh
           echo "smoke install OK"
 
       - name: Publish to npm (with provenance)

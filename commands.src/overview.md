@@ -2,7 +2,7 @@
 description: Bootstrap a new project. Runs design-research, research review, double grill (incl. data/state flow), datasource-understanding baseline, and planning. Run once per project.
 ---
 
-Caveman ULTRA mode.
+compression: user (.claude/ref/compression.md).
 
 Recommended: run from plan mode (Shift+Tab). Planning agents are read-only by
 tool grant; plan mode adds a read-only gate on the main session too. Optional.
@@ -16,11 +16,17 @@ Goal: stand up a fresh project workspace with a well-grounded plan.
 ### Round 1 — Initial grill
 
 1. Run the `grill-me` skill to interrogate me. Goal: understand initial scope.
-   Cover: project purpose, success criteria, external services, Azure services
-   needed (type + sizing), region, deployment target (Azure or local for E2E),
-   known constraints, unknowns. ALSO establish:
+   Cover: project purpose, success criteria, external services, cloud/infra
+   services needed (type + sizing, if any), region, known constraints, unknowns.
+   ALSO establish:
+   - **project_type**: web app / desktop app / script / library / other. This
+     drives the deterministic flag derivation (step 6) and knowledge-doc
+     selection.
    - **has_frontend**: is there a browser-facing UI? If yes, what is the frontend
      root path (e.g. `src/web/`, `app/`)? This drives the mandatory-E2E path match.
+   - **deploy meaning**: what does "done and shipped" mean for this project —
+     cloud deploy (where?), package publish (which registry?), verified
+     install/run instructions, or none (why)? This sets `deploy_kind`.
    Do not stop early. Do not write OVERVIEW.md yet.
 
 Store the round-1 answers as working context — do NOT write OVERVIEW.md yet.
@@ -86,10 +92,22 @@ Store the round-1 answers as working context — do NOT write OVERVIEW.md yet.
    - Project purpose and success criteria
    - Scope and constraints (informed by research findings)
    - External services with confirmed capabilities/limits
-   - "Azure services" section: every service with expected SKU
-   - Deployment target (azure-deployed or local-docker for E2E)
+   - Cloud/infra services section: every service with expected SKU (if any)
    - `has_frontend: true|false` and, if true, the frontend root path
    - Known risks / open questions (if any remain)
+
+   PROJECT FLAGS (hard rule 10 — declared once here, recorded verbatim, never
+   re-derived later):
+   - `project_type: web app|desktop app|script|library|other` (declared in round 1)
+   - `infra_needed: true|false` — derived: application types (web app, desktop
+     app, service) → true; script / library → false. Overridable here with a
+     stated reason.
+   - `e2e_kind: browser|cli|http|library-api` — derived: has_frontend → browser;
+     backend/API service → http; script → cli; library → library-api.
+   - `deploy_kind: cloud-deploy|package-publish|install-run-verified|none(<reason>)`
+     (from the round-1 "deploy meaning" answer).
+   - `knowledge_docs:` — derived list: web app or has_frontend → `knowledge/webapp.md`;
+     Azure services declared OR Azure cloud-deploy → `knowledge/azure.md`; else empty.
 
    OVERVIEW.md is written HERE — after the re-grill, not before.
 
@@ -112,8 +130,10 @@ Store the round-1 answers as working context — do NOT write OVERVIEW.md yet.
 
 8. Hand OVERVIEW.md + DATAFLOW.md + design-research findings to the `planner`
    subagent. PLAN.md MUST:
-   - Start with Phase 0 (infra setup) as the first entry (always).
-   - End with a final code phase that contains the deploy task block.
+   - Start with Phase 0 (infra setup) as the first entry IFF `infra_needed: true`;
+     when `infra_needed: false` there is no Phase 0 — Phase 1 is the first entry.
+   - End with a final code phase whose deploy task completes `deploy_kind`
+     (cloud deploy / package publish / verified install-run / none-with-reason).
    - For any phase whose `changes` touch the frontend root: include ≥1
      UI-existence acceptance criterion naming the specific user-visible
      interactive element the phase introduces (not "page renders 200").
@@ -138,15 +158,18 @@ Store the round-1 answers as working context — do NOT write OVERVIEW.md yet.
 
 phase: 0 (pending)
 completed: project bootstrapped — design research, research review, double grill (incl. data/state flow) done
-next: run /infra to provision Azure infrastructure
+next: <if infra_needed: "run /infra to provision infrastructure (Phase 0)"; else "run /phase 1">
 blocker: none
 
 ```
+   When `infra_needed: false`, set `phase: 1 (pending)` and the next line to
+   "run /phase 1".
 10. Create docs/ISSUES.md with header `# Issues` and `## Archived` section.
 
 11. Create empty docs/HISTORY.md.
 
-12. Create docs/INFRA.md from the template (populated by /infra).
+12. Create docs/INFRA.md from the template (populated by /infra). Skip when
+    `infra_needed: false`.
 
 13. Create docs/ENDPOINTS.md:
  ```
@@ -162,5 +185,7 @@ case NAMES (no values). I confirm the case-name set is COMPLETE here — these n
 are the up-front behavioral contract; values get filled + reviewed per phase at
 `/phase` SPEC REVIEW.
 
-Remind me: "Run `/infra` next to provision the Azure environment (Phase 0) and
-run the one-time AUTH PROOF before starting Phase 1."
+Remind me of the next step per `infra_needed`:
+- `infra_needed: true` → "Run `/infra` next to provision the environment (Phase 0)
+  and run the one-time AUTH PROOF before starting Phase 1."
+- `infra_needed: false` → "No infra phase — run `/phase 1` to start."

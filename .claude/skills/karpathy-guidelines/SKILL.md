@@ -5,7 +5,7 @@ description: Coding and debugging discipline. Apply on every coding and debug ta
 
 # karpathy-guidelines
 
-Apply on every coding + debug task. Caveman ULTRA mode.
+Apply on every coding + debug task.
 
 ## Coding
 - Smallest change that works. No speculative abstraction. No "while I'm here".
